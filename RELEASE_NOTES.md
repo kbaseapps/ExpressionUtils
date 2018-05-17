@@ -153,3 +153,7 @@ typedef structure {
         string processing_comments;
 }RNASeqExpression;
 -----------------------------------------------------------------------------------------
+
+### Version 0.1.2
+
+ - Added new method get_enhancedFilteredExpressionMatrix() which serves to the javascript viewer code a version of the specified filtered expression matrix, joined with functional descriptions and the fold change and q-values from the differential expression matrix that was used to filter the matrix rows.

@@ -1,11 +1,14 @@
 import os
 import uuid
 import re
+import numpy
 from pprint import pprint, pformat
+
 
 from Workspace.WorkspaceClient import Workspace
 from DataFileUtil.DataFileUtilClient import DataFileUtil
 from DataFileUtil.baseclient import ServerError as DFUError
+from GenomeAnnotationAPI.GenomeAnnotationAPIClient import GenomeAnnotationAPI
 
 class ExprMatrixUtils:
     """
@@ -24,6 +27,7 @@ class ExprMatrixUtils:
         self.ws_url = config['workspace-url']
         self.ws_client = Workspace(self.ws_url)
         self.dfu = DataFileUtil(self.callback_url)
+        self.gaa = GenomeAnnotationAPI( self.callback_url )
         pass
 
     def process_params(self, params):
@@ -203,3 +207,139 @@ class ExprMatrixUtils:
                                                   expr_set_data,
                                                   '{0}_TPM_ExpressionMatrix'.format(output_obj_name))
         return fpkm_ref, tpm_ref
+
+
+    def get_matrix_stats( self, raw_row ):
+        """
+        returns a list of [ min, max, mean, std.dev, is_data_missing] for one row of conditional 
+        expression values
+        """
+        has_missing = "No"
+        row = []
+        for r in raw_row:
+            if r == None or numpy.isnan( r ):     # careful here - r can be 0 which is a legitimate value
+                has_missing = "Yes"
+            else:
+                row.append(r)
+
+        if len( row ) < 1:
+            return( [ 'NA', 'NA', 'NA', 'NA', 'Yes' ] )
+
+        if len( row ) == 1:
+           sd = 0
+        else:
+           sd = numpy.std( row, ddof=1 )
+        return( [ min( row ), max( row ), numpy.mean( row ), sd, has_missing ] )
+
+
+    def convert_dem_to_dict( self, dem ):
+        """
+        returns a dict that maps feature_id -> [ fc, q ]
+        """
+        row_ids = dem.get( 'row_ids' )
+        vals = dem.get( 'values' )
+  
+        n_rows = len( row_ids )
+        if ( len( vals ) != n_rows ):
+            raise Exception( "length discrepancy in differential expression matrix: {0} row_ids but {1} values".format( n_rows, len( fvals ) ) )
+
+        dem_dict = {}
+        for _id, val in zip(row_ids, vals):
+            dem_dict[_id] = [ val[0], val[2] ]  # [fc,q]. (not bothering to check for dups here)
+
+        return dem_dict
+
+
+    def get_enhancedFEM( self, params ):
+        """
+        implements get_enhancedFilteredExpressionMatrix() method
+        """
+
+        if 'fem_object_ref' not in params:
+            raise ValueError( "fem_object_ref parameter not given to get_enhancedFilteredExpressionMatrix" )
+
+        fem_object_ref = params.get( 'fem_object_ref' )
+
+        fem_obj_ret = self.ws_client.get_objects2(
+                       {'objects': [{'ref': fem_object_ref }]})['data'][0]
+        fem = fem_obj_ret.get( 'data' )
+        prov = fem_obj_ret.get( 'provenance')[0]
+
+        # create the enhanced FEM, starting with the FEM
+
+        efem = {}
+        for k in [ 'genome_ref', 'scale', 'type' ]:
+            efem[k] = fem.get( k )
+
+        efem['data'] = {}
+        efem['data']['col_ids'] = [ "description", 
+                                    "fold-change",
+                                    "q-value",
+                                    "min",
+                                    "max",
+                                    "mean",
+                                    "std_dev",
+                                    "is_missing_values" ]
+        efem['data']['column_labels'] =[ "Description", 
+                                         "Fold change",
+                                         "Q value",
+                                         "Min. expression",
+                                         "Max. expression",
+                                         "Mean expression",
+                                         "Std. dev.",
+                                         "Missing values?" ]
+        fm = fem.get('data')
+        efem['data']['row_ids'] = fm.get('row_ids')
+        efem['data']['values' ] = []
+        n_efem_rows = len( efem['data']['row_ids'] )
+        fvals = fm.get('values')
+        if ( len( fvals ) != n_efem_rows ):
+            raise Exception( "length discrepancy in filtered expression matrix: {0} row_ids but {1} values".format( n_efem_rows, len( fvals ) ) )
+
+        # Get genome object and feature descriptions as a handy feature-indexed dict
+
+        feat_dict = self.gaa.get_feature_functions( { 'ref': fem.get( 'genome_ref' ), 'feature_id_list': None } )
+
+        # if this FEM has a "resolved_ws_objects" record in its provenance,
+        # then that should be a list of one DEM reference from which we get the FC and q values
+        # as a feature (=row_id) -indexed dict.
+
+        #if prov.get( 'resolved_ws_objects' ):
+        #    dem_ref = prov.get( 'resolved_ws_objects' )[0]
+        #    dem_obj_ret = self.dfu.get_objects( {'object_refs': [ dem_ref ] } ).get('data')[0]
+        #    dem = dem_obj_ret.get( 'data' )
+        #    dem_dict = self.convert_dem_to_dict( dem.get('data') )  # convert to dictionary for quick lookups
+        if fem.get( 'diff_expr_matrix_ref' ):
+            dem_ref = fem.get( 'diff_expr_matrix_ref' )
+            dem_obj_ret = self.dfu.get_objects( {'object_refs': [ dem_ref ] } ).get('data')[0]
+            dem = dem_obj_ret.get( 'data' )
+            dem_dict = self.convert_dem_to_dict( dem.get('data') )  # convert to dictionary for quick lookups
+        else:
+            dem_dict = {}   # empty dictionary
+
+        # for each row
+
+        for row_id, fm_val_row in zip( fm.get('row_ids'), fvals ):
+
+            # make a new row with NA for description, FC and q
+
+            new_values_row =  [ 'NA', 'NA', 'NA' ] + self.get_matrix_stats( fm_val_row )
+
+            # if we have a description for this feature (row_id) put it in the first column
+
+            desc = feat_dict.get( row_id )
+            if desc:
+                new_values_row[0] = desc     # leave as 'NA' if no entry in feat_dict
+
+            # if we have a DEM entry for this row, put FC and q into 2nd and 3rd columns
+            d = dem_dict.get( row_id )
+            if d:
+                new_values_row[1], new_values_row[2] = d
+
+            # finally, add this row to the eFEM
+
+            efem['data']['values'].append( new_values_row )
+
+
+        return efem
+

@@ -26,13 +26,7 @@ ExpressionUtils::ExpressionUtilsClient
 =head1 DESCRIPTION
 
 
-A KBase module: ExpressionUtils
 
-This module is intended for use by Assemblers to upload RNASeq Expression files
-(gtf, fpkm and ctab). This module generates the ctab files and tpm data if they are absent.
-The expression files are uploaded as a single compressed file.This module also generates
-expression levels and tpm expression levels from the input files and saves them in the
-workspace object. Once uploaded, the expression files can be downloaded onto an output directory.
 
 
 =cut
@@ -506,6 +500,150 @@ getExprMatrixOutput is a reference to a hash where the following keys are define
     }
 }
  
+
+
+=head2 get_enhancedFilteredExpressionMatrix
+
+  $return = $obj->get_enhancedFilteredExpressionMatrix($params)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$params is an ExpressionUtils.getEnhancedFEMParams
+$return is an ExpressionUtils.getEnhancedFEMOutput
+getEnhancedFEMParams is a reference to a hash where the following keys are defined:
+	fem_object_ref has a value which is a string
+getEnhancedFEMOutput is a reference to a hash where the following keys are defined:
+	enhanced_FEM has a value which is a KBaseFeatureValues.ExpressionMatrix
+ExpressionMatrix is a reference to a hash where the following keys are defined:
+	description has a value which is a string
+	type has a value which is a string
+	scale has a value which is a string
+	row_normalization has a value which is a string
+	col_normalization has a value which is a string
+	genome_ref has a value which is a KBaseFeatureValues.ws_genome_id
+	feature_mapping has a value which is a reference to a hash where the key is a string and the value is a string
+	conditionset_ref has a value which is a KBaseFeatureValues.ws_conditionset_id
+	condition_mapping has a value which is a reference to a hash where the key is a string and the value is a string
+	data has a value which is a KBaseFeatureValues.FloatMatrix2D
+	report has a value which is a KBaseFeatureValues.AnalysisReport
+ws_genome_id is a string
+ws_conditionset_id is a string
+FloatMatrix2D is a reference to a hash where the following keys are defined:
+	row_ids has a value which is a reference to a list where each element is a string
+	col_ids has a value which is a reference to a list where each element is a string
+	values has a value which is a reference to a list where each element is a reference to a list where each element is a float
+AnalysisReport is a reference to a hash where the following keys are defined:
+	checkTypeDetected has a value which is a string
+	checkUsed has a value which is a string
+	checkDescriptions has a value which is a reference to a list where each element is a string
+	checkResults has a value which is a reference to a list where each element is a KBaseFeatureValues.boolean
+	messages has a value which is a reference to a list where each element is a string
+	warnings has a value which is a reference to a list where each element is a string
+	errors has a value which is a reference to a list where each element is a string
+boolean is an int
+
+</pre>
+
+=end html
+
+=begin text
+
+$params is an ExpressionUtils.getEnhancedFEMParams
+$return is an ExpressionUtils.getEnhancedFEMOutput
+getEnhancedFEMParams is a reference to a hash where the following keys are defined:
+	fem_object_ref has a value which is a string
+getEnhancedFEMOutput is a reference to a hash where the following keys are defined:
+	enhanced_FEM has a value which is a KBaseFeatureValues.ExpressionMatrix
+ExpressionMatrix is a reference to a hash where the following keys are defined:
+	description has a value which is a string
+	type has a value which is a string
+	scale has a value which is a string
+	row_normalization has a value which is a string
+	col_normalization has a value which is a string
+	genome_ref has a value which is a KBaseFeatureValues.ws_genome_id
+	feature_mapping has a value which is a reference to a hash where the key is a string and the value is a string
+	conditionset_ref has a value which is a KBaseFeatureValues.ws_conditionset_id
+	condition_mapping has a value which is a reference to a hash where the key is a string and the value is a string
+	data has a value which is a KBaseFeatureValues.FloatMatrix2D
+	report has a value which is a KBaseFeatureValues.AnalysisReport
+ws_genome_id is a string
+ws_conditionset_id is a string
+FloatMatrix2D is a reference to a hash where the following keys are defined:
+	row_ids has a value which is a reference to a list where each element is a string
+	col_ids has a value which is a reference to a list where each element is a string
+	values has a value which is a reference to a list where each element is a reference to a list where each element is a float
+AnalysisReport is a reference to a hash where the following keys are defined:
+	checkTypeDetected has a value which is a string
+	checkUsed has a value which is a string
+	checkDescriptions has a value which is a reference to a list where each element is a string
+	checkResults has a value which is a reference to a list where each element is a KBaseFeatureValues.boolean
+	messages has a value which is a reference to a list where each element is a string
+	warnings has a value which is a reference to a list where each element is a string
+	errors has a value which is a reference to a list where each element is a string
+boolean is an int
+
+
+=end text
+
+=item Description
+
+
+
+=back
+
+=cut
+
+ sub get_enhancedFilteredExpressionMatrix
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function get_enhancedFilteredExpressionMatrix (received $n, expecting 1)");
+    }
+    {
+	my($params) = @args;
+
+	my @_bad_arguments;
+        (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to get_enhancedFilteredExpressionMatrix:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'get_enhancedFilteredExpressionMatrix');
+	}
+    }
+
+    my $url = $self->{url};
+    my $result = $self->{client}->call($url, $self->{headers}, {
+	    method => "ExpressionUtils.get_enhancedFilteredExpressionMatrix",
+	    params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'get_enhancedFilteredExpressionMatrix',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_enhancedFilteredExpressionMatrix",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'get_enhancedFilteredExpressionMatrix',
+				       );
+    }
+}
+ 
   
 sub status
 {
@@ -549,16 +687,16 @@ sub version {
             Bio::KBase::Exceptions::JSONRPC->throw(
                 error => $result->error_message,
                 code => $result->content->{code},
-                method_name => 'get_expressionMatrix',
+                method_name => 'get_enhancedFilteredExpressionMatrix',
             );
         } else {
             return wantarray ? @{$result->result} : $result->result->[0];
         }
     } else {
         Bio::KBase::Exceptions::HTTP->throw(
-            error => "Error invoking method get_expressionMatrix",
+            error => "Error invoking method get_enhancedFilteredExpressionMatrix",
             status_line => $self->{client}->status_line,
-            method_name => 'get_expressionMatrix',
+            method_name => 'get_enhancedFilteredExpressionMatrix',
         );
     }
 }
@@ -945,6 +1083,74 @@ exprMatrix_TPM_ref has a value which is a string
 a reference to a hash where the following keys are defined:
 exprMatrix_FPKM_ref has a value which is a string
 exprMatrix_TPM_ref has a value which is a string
+
+
+=end text
+
+=back
+
+
+
+=head2 getEnhancedFEMParams
+
+=over 4
+
+
+
+=item Description
+
+*
+Input parameters and method for getting the enhanced Filtered Expresion Matrix
+for viewing
+    *
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+fem_object_ref has a value which is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+fem_object_ref has a value which is a string
+
+
+=end text
+
+=back
+
+
+
+=head2 getEnhancedFEMOutput
+
+=over 4
+
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+enhanced_FEM has a value which is a KBaseFeatureValues.ExpressionMatrix
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+enhanced_FEM has a value which is a KBaseFeatureValues.ExpressionMatrix
 
 
 =end text

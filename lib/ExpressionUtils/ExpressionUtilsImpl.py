@@ -29,13 +29,7 @@ class ExpressionUtils:
     ExpressionUtils
 
     Module Description:
-    A KBase module: ExpressionUtils
-
-This module is intended for use by Assemblers to upload RNASeq Expression files
-(gtf, fpkm and ctab). This module generates the ctab files and tpm data if they are absent.
-The expression files are uploaded as a single compressed file.This module also generates
-expression levels and tpm expression levels from the input files and saves them in the
-workspace object. Once uploaded, the expression files can be downloaded onto an output directory.
+    
     '''
 
     ######## WARNING FOR GEVENT USERS ####### noqa
@@ -44,9 +38,9 @@ workspace object. Once uploaded, the expression files can be downloaded onto an 
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.1.1"
-    GIT_URL = "https://github.com/JamesJeffryes/ExpressionUtils.git"
-    GIT_COMMIT_HASH = "62ce653aa5c5b39a597486613bc140b173a35c99"
+    VERSION = "0.1.2"
+    GIT_URL = "git@github.com:sean-mccorkle/ExpressionUtils.git"
+    GIT_COMMIT_HASH = "d18d7ff875c006e2b6cb6a3888a3e8d507e3269d"
 
     #BEGIN_CLASS_HEADER
 
@@ -476,6 +470,81 @@ workspace object. Once uploaded, the expression files can be downloaded onto an 
         # At some point might do deeper type checking...
         if not isinstance(returnVal, dict):
             raise ValueError('Method get_expressionMatrix return value ' +
+                             'returnVal is not type dict as required.')
+        # return the results
+        return [returnVal]
+
+    def get_enhancedFilteredExpressionMatrix(self, ctx, params):
+        """
+        :param params: instance of type "getEnhancedFEMParams" (* Input
+           parameters and method for getting the enhanced Filtered Expresion
+           Matrix for viewing *) -> structure: parameter "fem_object_ref" of
+           String
+        :returns: instance of type "getEnhancedFEMOutput" -> structure:
+           parameter "enhanced_FEM" of type "ExpressionMatrix" (A wrapper
+           around a FloatMatrix2D designed for simple matricies of Expression
+           data.  Rows map to features, and columns map to conditions.  The
+           data type includes some information about normalization factors
+           and contains mappings from row ids to features and col ids to
+           conditions. description - short optional description of the
+           dataset type - ? level, ratio, log-ratio scale - ? probably: raw,
+           ln, log2, log10 col_normalization - mean_center, median_center,
+           mode_center, zscore row_normalization - mean_center,
+           median_center, mode_center, zscore feature_mapping - map from
+           row_id to feature id in the genome data - contains values for
+           (feature,condition) pairs, where features correspond to rows and
+           conditions are columns (ie data.values[feature][condition])
+           @optional description row_normalization col_normalization
+           @optional genome_ref feature_mapping conditionset_ref
+           condition_mapping report @metadata ws type @metadata ws scale
+           @metadata ws row_normalization @metadata ws col_normalization
+           @metadata ws genome_ref as Genome @metadata ws conditionset_ref as
+           ConditionSet @metadata ws length(data.row_ids) as feature_count
+           @metadata ws length(data.col_ids) as condition_count) ->
+           structure: parameter "description" of String, parameter "type" of
+           String, parameter "scale" of String, parameter "row_normalization"
+           of String, parameter "col_normalization" of String, parameter
+           "genome_ref" of type "ws_genome_id" (The workspace ID for a Genome
+           data object. @id ws KBaseGenomes.Genome), parameter
+           "feature_mapping" of mapping from String to String, parameter
+           "conditionset_ref" of type "ws_conditionset_id" (The workspace ID
+           for a ConditionSet data object (Note: ConditionSet objects do not
+           yet exist - this is for now used as a placeholder). @id ws
+           KBaseExperiments.ConditionSet), parameter "condition_mapping" of
+           mapping from String to String, parameter "data" of type
+           "FloatMatrix2D" (A simple 2D matrix of floating point numbers with
+           labels/ids for rows and columns.  The matrix is stored as a list
+           of lists, with the outer list containing rows, and the inner lists
+           containing values for each column of that row.  Row/Col ids should
+           be unique. row_ids - unique ids for rows. col_ids - unique ids for
+           columns. values - two dimensional array indexed as:
+           values[row][col] @metadata ws length(row_ids) as n_rows @metadata
+           ws length(col_ids) as n_cols) -> structure: parameter "row_ids" of
+           list of String, parameter "col_ids" of list of String, parameter
+           "values" of list of list of Double, parameter "report" of type
+           "AnalysisReport" (A basic report object used for a variety of
+           cases to mark informational messages, warnings, and errors related
+           to processing or quality control checks of raw data.) ->
+           structure: parameter "checkTypeDetected" of String, parameter
+           "checkUsed" of String, parameter "checkDescriptions" of list of
+           String, parameter "checkResults" of list of type "boolean"
+           (Indicates true or false values, false = 0, true = 1 @range
+           [0,1]), parameter "messages" of list of String, parameter
+           "warnings" of list of String, parameter "errors" of list of String
+        """
+        # ctx is the context object
+        # return variables are: returnVal
+        #BEGIN get_enhancedFilteredExpressionMatrix
+
+        efem = self.expr_matrix_utils.get_enhancedFEM( params )
+
+        returnVal = { 'enhanced_FEM': efem }
+
+        #END get_enhancedFilteredExpressionMatrix
+
+        # At some point might do deeper type checking...
+        if not isinstance(returnVal, dict):
+            raise ValueError('Method get_enhancedFilteredExpressionMatrix return value ' +
                              'returnVal is not type dict as required.')
         # return the results
         return [returnVal]

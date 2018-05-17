@@ -12,6 +12,8 @@ A KBase module: ExpressionUtils
     workspace object. Once uploaded, the expression files can be downloaded onto an output directory.
 **/
 
+#include <KBaseFeatureValues.spec>
+
 module ExpressionUtils {
 
    /* A boolean - 0 for false, 1 for true.
@@ -110,7 +112,7 @@ module ExpressionUtils {
      } ExportOutput;
 
     /** Wrapper function for use by in-narrative downloaders to download expressions from shock **/
-
+ 
     funcdef export_expression(ExportParams params)
                      returns (ExportOutput output)
                      authentication required;
@@ -141,4 +143,23 @@ module ExpressionUtils {
     funcdef  get_expressionMatrix(getExprMatrixParams params)
                                    returns (getExprMatrixOutput)
                                    authentication required;
+
+    /**
+        Input parameters and method for getting the enhanced Filtered Expresion Matrix
+        for viewing
+    **/
+
+    typedef structure {
+        string  fem_object_ref;
+    } getEnhancedFEMParams;
+
+    typedef structure {
+        KBaseFeatureValues.ExpressionMatrix  enhanced_FEM;
+    } getEnhancedFEMOutput;
+
+
+    funcdef  get_enhancedFilteredExpressionMatrix( getEnhancedFEMParams params )
+                                   returns (getEnhancedFEMOutput)
+                                   authentication required;
+                                    
 };

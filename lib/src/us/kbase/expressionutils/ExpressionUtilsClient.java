@@ -16,14 +16,6 @@ import us.kbase.common.service.UnauthorizedException;
 /**
  * <p>Original spec-file module name: ExpressionUtils</p>
  * <pre>
- * *
- * A KBase module: ExpressionUtils
- * This module is intended for use by Assemblers to upload RNASeq Expression files
- * (gtf, fpkm and ctab). This module generates the ctab files and tpm data if they are absent.
- * The expression files are uploaded as a single compressed file.This module also generates
- * expression levels and tpm expression levels from the input files and saves them in the
- * workspace object. Once uploaded, the expression files can be downloaded onto an output directory.
- * *
  * </pre>
  */
 public class ExpressionUtilsClient {
@@ -237,6 +229,23 @@ public class ExpressionUtilsClient {
         args.add(params);
         TypeReference<List<GetExprMatrixOutput>> retType = new TypeReference<List<GetExprMatrixOutput>>() {};
         List<GetExprMatrixOutput> res = caller.jsonrpcCall("ExpressionUtils.get_expressionMatrix", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: get_enhancedFilteredExpressionMatrix</p>
+     * <pre>
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.expressionutils.GetEnhancedFEMParams GetEnhancedFEMParams} (original type "getEnhancedFEMParams")
+     * @return   instance of type {@link us.kbase.expressionutils.GetEnhancedFEMOutput GetEnhancedFEMOutput} (original type "getEnhancedFEMOutput")
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public GetEnhancedFEMOutput getEnhancedFilteredExpressionMatrix(GetEnhancedFEMParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<GetEnhancedFEMOutput>> retType = new TypeReference<List<GetEnhancedFEMOutput>>() {};
+        List<GetEnhancedFEMOutput> res = caller.jsonrpcCall("ExpressionUtils.get_enhancedFilteredExpressionMatrix", args, retType, true, true, jsonRpcContext, this.serviceVersion);
         return res.get(0);
     }
 

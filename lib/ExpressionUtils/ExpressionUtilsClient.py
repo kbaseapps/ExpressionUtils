@@ -111,6 +111,68 @@ class ExpressionUtils(object):
             'ExpressionUtils.get_expressionMatrix',
             [params], self._service_ver, context)
 
+    def get_enhancedFilteredExpressionMatrix(self, params, context=None):
+        """
+        :param params: instance of type "getEnhancedFEMParams" (* Input
+           parameters and method for getting the enhanced Filtered Expresion
+           Matrix for viewing *) -> structure: parameter "fem_object_ref" of
+           String
+        :returns: instance of type "getEnhancedFEMOutput" -> structure:
+           parameter "enhanced_FEM" of type "ExpressionMatrix" (A wrapper
+           around a FloatMatrix2D designed for simple matricies of Expression
+           data.  Rows map to features, and columns map to conditions.  The
+           data type includes some information about normalization factors
+           and contains mappings from row ids to features and col ids to
+           conditions. description - short optional description of the
+           dataset type - ? level, ratio, log-ratio scale - ? probably: raw,
+           ln, log2, log10 col_normalization - mean_center, median_center,
+           mode_center, zscore row_normalization - mean_center,
+           median_center, mode_center, zscore feature_mapping - map from
+           row_id to feature id in the genome data - contains values for
+           (feature,condition) pairs, where features correspond to rows and
+           conditions are columns (ie data.values[feature][condition])
+           @optional description row_normalization col_normalization
+           @optional genome_ref feature_mapping conditionset_ref
+           condition_mapping report @metadata ws type @metadata ws scale
+           @metadata ws row_normalization @metadata ws col_normalization
+           @metadata ws genome_ref as Genome @metadata ws conditionset_ref as
+           ConditionSet @metadata ws length(data.row_ids) as feature_count
+           @metadata ws length(data.col_ids) as condition_count) ->
+           structure: parameter "description" of String, parameter "type" of
+           String, parameter "scale" of String, parameter "row_normalization"
+           of String, parameter "col_normalization" of String, parameter
+           "genome_ref" of type "ws_genome_id" (The workspace ID for a Genome
+           data object. @id ws KBaseGenomes.Genome), parameter
+           "feature_mapping" of mapping from String to String, parameter
+           "conditionset_ref" of type "ws_conditionset_id" (The workspace ID
+           for a ConditionSet data object (Note: ConditionSet objects do not
+           yet exist - this is for now used as a placeholder). @id ws
+           KBaseExperiments.ConditionSet), parameter "condition_mapping" of
+           mapping from String to String, parameter "data" of type
+           "FloatMatrix2D" (A simple 2D matrix of floating point numbers with
+           labels/ids for rows and columns.  The matrix is stored as a list
+           of lists, with the outer list containing rows, and the inner lists
+           containing values for each column of that row.  Row/Col ids should
+           be unique. row_ids - unique ids for rows. col_ids - unique ids for
+           columns. values - two dimensional array indexed as:
+           values[row][col] @metadata ws length(row_ids) as n_rows @metadata
+           ws length(col_ids) as n_cols) -> structure: parameter "row_ids" of
+           list of String, parameter "col_ids" of list of String, parameter
+           "values" of list of list of Double, parameter "report" of type
+           "AnalysisReport" (A basic report object used for a variety of
+           cases to mark informational messages, warnings, and errors related
+           to processing or quality control checks of raw data.) ->
+           structure: parameter "checkTypeDetected" of String, parameter
+           "checkUsed" of String, parameter "checkDescriptions" of list of
+           String, parameter "checkResults" of list of type "boolean"
+           (Indicates true or false values, false = 0, true = 1 @range
+           [0,1]), parameter "messages" of list of String, parameter
+           "warnings" of list of String, parameter "errors" of list of String
+        """
+        return self._client.call_method(
+            'ExpressionUtils.get_enhancedFilteredExpressionMatrix',
+            [params], self._service_ver, context)
+
     def status(self, context=None):
         return self._client.call_method('ExpressionUtils.status',
                                         [], self._service_ver, context)
