@@ -1,3 +1,6 @@
+### Version 0.1.4
+- Unquote urlencoded lines in expression files
+
 ### Version 0.0.1
 __Initial version of the module to upload, download and export RNASeq Expression.__
 - Saves and retrieves the expression data files generated either by the StringTie or Cufflinks App.

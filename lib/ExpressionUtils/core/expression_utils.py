@@ -1,10 +1,8 @@
 import math
-
 import logging
-
 import time
-
 import sys
+import urllib
 
 from GenomeSearchUtil.GenomeSearchUtilClient import GenomeSearchUtil
 
@@ -81,14 +79,14 @@ class ExpressionUtils:
         with open(filepath) as f:
             next(f)
             for line in f:
-                larr = line.split("\t")
+                larr = urllib.unquote(line).split("\t")
 
                 if larr[id_col] in feature_ids:
                     gene_id = larr[id_col]
                 elif larr[1] in feature_ids:
                     gene_id = larr[1]
                 else:
-                    error_msg = 'line {} does not include known feature'.format(line)
+                    error_msg = 'Line does not include a known feature: {}'.format(line)
                     raise ValueError(error_msg)
 
                 if gene_id != "":
