@@ -90,8 +90,7 @@ class GFFUtilsTest(unittest.TestCase):
 
         exp_utils = ExpressionUtils(self.__class__.cfg)  # no logger specified
 
-        with self.assertRaisesRegexp(ValueError, 
-                                     'line.*'):
+        with self.assertRaisesRegexp(ValueError, 'Line does not include a known feature'):
             exp_utils.get_expression_levels(filepath='data/expression_utils/missing_gene.genes.fpkm_tracking',
                                             genome_ref='')
 
