@@ -11,6 +11,7 @@ import json as _json
 import requests as _requests
 import random as _random
 import os as _os
+import traceback
 
 try:
     from configparser import ConfigParser as _ConfigParser  # py 3
@@ -213,7 +214,11 @@ class BaseClient(object):
         return context
 
     def _check_job(self, service, job_id):
-        return self._call(self.url, service + '._check_job', [job_id])
+        try:
+            return self._call(self.url, service + '._check_job', [job_id])
+        except Exception as e:
+            traceback.print_exc()
+            return {"finished": False, "check_job_failure": True}
 
     def _submit_job(self, service_method, args, service_ver=None,
                     context=None):
@@ -236,7 +241,8 @@ class BaseClient(object):
         mod, _ = service_method.split('.')
         job_id = self._submit_job(service_method, args, service_ver, context)
         async_job_check_time = self.async_job_check_time
-        while True:
+        check_job_failures = 0
+        while check_job_failures < 5:
             time.sleep(async_job_check_time)
             async_job_check_time = (async_job_check_time *
                                     self.async_job_check_time_scale_percent /
@@ -250,6 +256,9 @@ class BaseClient(object):
                 if len(job_state['result']) == 1:
                     return job_state['result'][0]
                 return job_state['result']
+            if job_state.get('check_job_failure'):
+                check_job_failures += 1
+        raise RuntimeError("Repeated check job failures")
 
     def call_method(self, service_method, args, service_ver=None,
                     context=None):
