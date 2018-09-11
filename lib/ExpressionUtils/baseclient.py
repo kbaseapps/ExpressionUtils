@@ -12,6 +12,8 @@ import requests as _requests
 import random as _random
 import os as _os
 import traceback
+from requests.exceptions import ConnectionError
+
 
 try:
     from configparser import ConfigParser as _ConfigParser  # py 3
@@ -216,7 +218,7 @@ class BaseClient(object):
     def _check_job(self, service, job_id):
         try:
             return self._call(self.url, service + '._check_job', [job_id])
-        except Exception as e:
+        except ConnectionError as e:
             traceback.print_exc()
             return {"finished": False, "check_job_failure": True}
 
