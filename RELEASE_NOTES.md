@@ -1,3 +1,6 @@
+### Version 0.1.5
+- Update the baseclients for all modules used to resolve _check_job BADSTATUSCODE failure
+
 ### Version 0.1.4
 - Unquote urlencoded lines in expression files
 
