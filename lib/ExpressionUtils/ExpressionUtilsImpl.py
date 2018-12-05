@@ -11,11 +11,11 @@ from datetime import datetime
 from pprint import pprint
 from pprint import pformat
 
-from DataFileUtil.DataFileUtilClient import DataFileUtil
-from DataFileUtil.baseclient import ServerError as DFUError
-from Workspace.WorkspaceClient import Workspace
-from Workspace.baseclient import ServerError as WorkspaceError
-from ReadsAlignmentUtils.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
+from installed_clients.DataFileUtilClient import DataFileUtil
+from installed_clients.baseclient import ServerError as DFUError
+from installed_clients.WorkspaceClient import Workspace
+from installed_clients.baseclient import ServerError as WorkspaceError
+from installed_clients.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
 from core.expression_utils import ExpressionUtils as Expression_Utils
 from core.table_maker import TableMaker
 from core.exprMatrix_utils import ExprMatrixUtils

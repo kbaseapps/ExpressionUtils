@@ -16,12 +16,12 @@ except BaseException:
 from pprint import pprint, pformat  # noqa: F401
 
 from biokbase.workspace.client import Workspace as workspaceService
-from DataFileUtil.DataFileUtilClient import DataFileUtil
-from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
+from installed_clients.DataFileUtilClient import DataFileUtil
+from installed_clients.GenomeFileUtilClient import GenomeFileUtil
 from ExpressionUtils.ExpressionUtilsImpl import ExpressionUtils
 from ExpressionUtils.ExpressionUtilsServer import MethodContext
 from ExpressionUtils.authclient import KBaseAuth as _KBaseAuth
-from GenomeAnnotationAPI.GenomeAnnotationAPIClient import GenomeAnnotationAPI
+from installed_clients.GenomeAnnotationAPIClient import GenomeAnnotationAPI
 
 class ExprMatrixUtilsTest(unittest.TestCase):
     @classmethod

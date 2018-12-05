@@ -22,13 +22,12 @@ except BaseException:
 from pprint import pprint  # noqa: F401
 
 from biokbase.workspace.client import Workspace as workspaceService
-from Workspace.WorkspaceClient import Workspace
-from DataFileUtil.DataFileUtilClient import DataFileUtil
-from ReadsUtils.ReadsUtilsClient import ReadsUtils
-from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
-from ReadsAlignmentUtils.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
-from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
-from GenomeAnnotationAPI.GenomeAnnotationAPIServiceClient import GenomeAnnotationAPI
+from installed_clients.WorkspaceClient import Workspace
+from installed_clients.DataFileUtilClient import DataFileUtil
+from installed_clients.ReadsUtilsClient import ReadsUtils
+from installed_clients.AssemblyUtilClient import AssemblyUtil
+from installed_clients.GenomeFileUtilClient import GenomeFileUtil
+from installed_clients.GenomeAnnotationAPIServiceClient import GenomeAnnotationAPI
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport
 from ExpressionUtils.ExpressionUtilsImpl import ExpressionUtils
 from ExpressionUtils.ExpressionUtilsServer import MethodContext

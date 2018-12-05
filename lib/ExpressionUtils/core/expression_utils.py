@@ -4,7 +4,7 @@ import time
 import sys
 import urllib
 
-from GenomeSearchUtil.GenomeSearchUtilClient import GenomeSearchUtil
+from installed_clients.GenomeSearchUtilClient import GenomeSearchUtil
 
 
 def get_logger():
