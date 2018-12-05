@@ -7,7 +7,7 @@
   "type" : "sdk",
   "version_tag" : "release"
 }, {
-  "module_name" : "GenomeAnnotationAPI",
+  "module_name" : "GenomeAnnotationApi",
   "type" : "sdk",
   "version_tag" : "release"
 }, {
@@ -21,7 +21,7 @@
 }, {
   "module_name" : "ReadsAlignmentUtils",
   "type" : "sdk",
-  "version_tag" : "dev"
+  "version_tag" : "release"
 }, {
   "module_name" : "ReadsUtils",
   "type" : "sdk",

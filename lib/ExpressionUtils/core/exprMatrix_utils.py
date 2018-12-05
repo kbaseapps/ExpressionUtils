@@ -5,10 +5,10 @@ import numpy
 from pprint import pprint, pformat
 
 
-from Workspace.WorkspaceClient import Workspace
-from DataFileUtil.DataFileUtilClient import DataFileUtil
-from DataFileUtil.baseclient import ServerError as DFUError
-from GenomeAnnotationAPI.GenomeAnnotationAPIClient import GenomeAnnotationAPI
+from installed_clients.WorkspaceClient import Workspace
+from installed_clients.DataFileUtilClient import DataFileUtil
+from installed_clients.baseclient import ServerError as DFUError
+from installed_clients.GenomeAnnotationApiClient import GenomeAnnotationAPI
 
 class ExprMatrixUtils:
     """
