@@ -8,7 +8,7 @@ from pprint import pprint, pformat
 from installed_clients.WorkspaceClient import Workspace
 from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.baseclient import ServerError as DFUError
-from installed_clients.GenomeAnnotationAPIClient import GenomeAnnotationAPI
+from installed_clients.GenomeAnnotationApiClient import GenomeAnnotationAPI
 
 class ExprMatrixUtils:
     """
