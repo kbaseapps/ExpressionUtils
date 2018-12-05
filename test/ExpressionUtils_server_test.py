@@ -27,7 +27,7 @@ from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.ReadsUtilsClient import ReadsUtils
 from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
-from installed_clients.GenomeAnnotationAPIServiceClient import GenomeAnnotationAPI
+from installed_clients.GenomeAnnotationApiServiceClient import GenomeAnnotationAPI
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport
 from ExpressionUtils.ExpressionUtilsImpl import ExpressionUtils
 from ExpressionUtils.ExpressionUtilsServer import MethodContext

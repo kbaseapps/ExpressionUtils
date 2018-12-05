@@ -21,7 +21,7 @@ from installed_clients.GenomeFileUtilClient import GenomeFileUtil
 from ExpressionUtils.ExpressionUtilsImpl import ExpressionUtils
 from ExpressionUtils.ExpressionUtilsServer import MethodContext
 from ExpressionUtils.authclient import KBaseAuth as _KBaseAuth
-from installed_clients.GenomeAnnotationAPIClient import GenomeAnnotationAPI
+from installed_clients.GenomeAnnotationApiClient import GenomeAnnotationAPI
 
 class ExprMatrixUtilsTest(unittest.TestCase):
     @classmethod
