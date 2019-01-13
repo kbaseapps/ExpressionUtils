@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
 #BEGIN_HEADER
-import os
-import sys
-import time
-import shutil
 import glob
 import logging
+import os
+import shutil
+import sys
+import time
 from datetime import datetime
-
-from pprint import pprint
 from pprint import pformat
+from pprint import pprint
 
 from installed_clients.DataFileUtilClient import DataFileUtil
-from installed_clients.baseclient import ServerError as DFUError
-from installed_clients.WorkspaceClient import Workspace
-from installed_clients.baseclient import ServerError as WorkspaceError
 from installed_clients.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
-from core.expression_utils import ExpressionUtils as Expression_Utils
-from core.table_maker import TableMaker
-from core.exprMatrix_utils import ExprMatrixUtils
+from installed_clients.WorkspaceClient import Workspace
+from installed_clients.baseclient import ServerError as DFUError
+from installed_clients.baseclient import ServerError as WorkspaceError
+from .core.exprMatrix_utils import ExprMatrixUtils
+from .core.expression_utils import ExpressionUtils as Expression_Utils
+from .core.table_maker import TableMaker
+
 
 #END_HEADER
 
@@ -67,8 +67,8 @@ class ExpressionUtils:
         Check if each of the params in the list are in the input params
         """
         for param in param_list:
-            if (param not in in_params or not in_params[param]):
-                raise ValueError('{} parameter is required'.format(param))
+            if param not in in_params or not in_params[param]:
+                raise ValueError(f'{param} parameter is required')
 
     def _proc_ws_obj_params(self, ctx, params):
         """
@@ -176,7 +176,7 @@ class ExpressionUtils:
 
                 allbamfiles = glob.glob(alignment_dir + '/*.bam')
                 if len(allbamfiles) == 0:
-                    raise ValueError('bam file does not exist in {}'.format(d))
+                    raise ValueError(f'bam file does not exist in {alignment_dir}')
                 elif len(allbamfiles) == 1:
                     bam_file_path = allbamfiles[0]
                 elif len(allbamfiles) > 1:
@@ -188,8 +188,8 @@ class ExpressionUtils:
                         if os.path.isfile(tmp_file_path):
                             bam_file_path = tmp_file_path
                         else:
-                            raise ValueError('accepted_hits.bam, accepted_hits_sorted.bam or other bam file not found in {}'.
-                                             format(alignment_dir))
+                            raise ValueError(f'accepted_hits.bam, accepted_hits_sorted.bam or '
+                                             f'other bam file not found in {alignment_dir}')
 
             result = self.table_maker.build_ctab_files(
                 ref_genome_path=gtf_file,

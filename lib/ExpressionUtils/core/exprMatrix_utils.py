@@ -1,14 +1,15 @@
 import os
-import uuid
 import re
+import uuid
+from pprint import pformat
+
 import numpy
-from pprint import pprint, pformat
 
-
-from installed_clients.WorkspaceClient import Workspace
 from installed_clients.DataFileUtilClient import DataFileUtil
-from installed_clients.baseclient import ServerError as DFUError
 from installed_clients.GenomeAnnotationApiClient import GenomeAnnotationAPI
+from installed_clients.WorkspaceClient import Workspace
+from installed_clients.baseclient import ServerError as DFUError
+
 
 class ExprMatrixUtils:
     """
@@ -27,7 +28,7 @@ class ExprMatrixUtils:
         self.ws_url = config['workspace-url']
         self.ws_client = Workspace(self.ws_url)
         self.dfu = DataFileUtil(self.callback_url)
-        self.gaa = GenomeAnnotationAPI( self.callback_url )
+        self.gaa = GenomeAnnotationAPI(self.callback_url)
         pass
 
     def process_params(self, params):
@@ -37,7 +38,7 @@ class ExprMatrixUtils:
         for p in [self.PARAM_IN_EXPSET_REF,
                   self.PARAM_IN_OBJ_NAME,
                   self.PARAM_IN_WS_NAME
-                 ]:
+                  ]:
             if p not in params:
                 raise ValueError('"{}" parameter is required, but missing'.format(p))
 
@@ -64,7 +65,7 @@ class ExprMatrixUtils:
             expr_set_data['genome_ref'] = expr_set_obj['data']['genome_id']
             expr_obj_refs = list()
             for expr_obj in expr_set_obj['data']['mapped_expression_ids']:
-                expr_obj_refs.append(expr_obj.values()[0])
+                expr_obj_refs.append(list(expr_obj.values())[0])
             expr_set_data['expr_obj_refs'] = expr_obj_refs
 
         elif re.match('KBaseSets.ExpressionSet-\d.\d', expr_set_obj_type):
@@ -82,62 +83,62 @@ class ExprMatrixUtils:
                             'or KBaseSets.ExpressionSet')
         return expr_set_data
 
-    def save_expression_matrix(self, tables, expr_set_data, em_obj_name, hidden = 0):
+    def save_expression_matrix(self, tables, expr_set_data, em_obj_name, hidden=0):
 
-        all_rows = {}    # build a dictionary of keys only which is a union of all row ids (gene_ids)
-        self.logger.info( '***** length of tables is {0}'.format( len( tables )))
+        all_rows = {}  # build a dictionary of keys only which is a union of all row ids (gene_ids)
+        self.logger.info('***** length of tables is {0}'.format(len(tables)))
         for table in tables:
-            for r in table.keys():
+            for r in list(table.keys()):
                 all_rows[r] = []
 
-        for gene_id in all_rows.keys():
+        for gene_id in list(all_rows.keys()):
             row = []
             for table in tables:
-                if ( gene_id in table ):
-                    #logger.info( 'append ' + gene_id )
-                    #logger.info( pformat( table[gene_id]))
-                               #all_rows[gene_id].append( table[gene_id] )
-                    row.append( table[gene_id] )
+                if gene_id in table:
+                    # logger.info( 'append ' + gene_id )
+                    # logger.info( pformat( table[gene_id]))
+                    # all_rows[gene_id].append( table[gene_id] )
+                    row.append(table[gene_id])
                 else:
-                    #logger.info( 'append  0' )
-                    row.append( 0 )
+                    # logger.info( 'append  0' )
+                    row.append(0)
                 all_rows[gene_id] = row
-                #logger.info( all_rows[gene_id])
+                # logger.info( all_rows[gene_id])
 
         em_data = {
-                    'genome_ref': expr_set_data['genome_ref'],
-                    'scale': 'log2',
-                    'type': 'level',
-                    'data': {
-                            'row_ids': [],
-                            'values': [],
-                            'col_ids': expr_set_data['expr_obj_names']
-                            },
-                    'feature_mapping' : {},
-                    'condition_mapping': expr_set_data['condition_map']
-                   }
+            'genome_ref': expr_set_data['genome_ref'],
+            'scale': 'log2',
+            'type': 'level',
+            'data': {
+                'row_ids': [],
+                'values': [],
+                'col_ids': expr_set_data['expr_obj_names']
+            },
+            'feature_mapping': {},
+            'condition_mapping': expr_set_data['condition_map']
+        }
 
         # we need to load row-by-row to preserve the order
         self.logger.info('loading expression matrix data')
 
-        for gene_id in all_rows.keys():
+        for gene_id in list(all_rows.keys()):
             em_data['feature_mapping'][gene_id] = gene_id
             em_data['data']['row_ids'].append(gene_id)
             em_data['data']['values'].append(all_rows[gene_id])
 
         try:
-            self.logger.info( 'saving em_data em_name {0}'.format(em_obj_name))
+            self.logger.info('saving em_data em_name {0}'.format(em_obj_name))
             obj_info = self.dfu.save_objects({'id': self.ws_id,
                                               'objects': [
-                                                          { 'type': 'KBaseFeatureValues.ExpressionMatrix',
-                                                            'data': em_data,
-                                                            'name': em_obj_name,
-                                                            'hidden': hidden,
-                                                            'extra_provenance_input_refs': [
-                                                                em_data.get('genome_ref'),
-                                                                self.params[self.PARAM_IN_EXPSET_REF]]
-                                                          }
-                                                    ]})[0]
+                                                  {'type': 'KBaseFeatureValues.ExpressionMatrix',
+                                                   'data': em_data,
+                                                   'name': em_obj_name,
+                                                   'hidden': hidden,
+                                                   'extra_provenance_input_refs': [
+                                                       em_data.get('genome_ref'),
+                                                       self.params[self.PARAM_IN_EXPSET_REF]]
+                                                   }
+                                              ]})[0]
             self.logger.info('ws save return:\n' + pformat(obj_info))
         except Exception as e:
             self.logger.exception(e)
@@ -164,10 +165,10 @@ class ExprMatrixUtils:
                                  .format(expr_obj_ref))
 
                 expr = self.ws_client.get_objects2(
-                                            {'objects':
-                                            [{'ref': expr_obj_ref}]})['data'][0]
+                    {'objects':
+                         [{'ref': expr_obj_ref}]})['data'][0]
 
-            except Exception, e:
+            except Exception as e:
                 self.logger.exception(e)
                 raise Exception('Unable to download expression object {0} from workspace {1}'.
                                 format(expr_obj_ref, expr_set_data['ws_name']))
@@ -185,7 +186,8 @@ class ExprMatrixUtils:
             if pr_comments is not None:
                 self.logger.info('pr_comments are {0}'.format(pr_comments))
 
-            fpkm_table = expr.get('data').get('expression_levels') # QUESTION: is this really FPKM levels?
+            fpkm_table = expr.get('data').get(
+                'expression_levels')  # QUESTION: is this really FPKM levels?
             self.logger.info('FPKM keycount: {0}'.format(len(fpkm_table.keys())))
             fpkm_tables.append(fpkm_table)
 
@@ -205,11 +207,11 @@ class ExprMatrixUtils:
         if tpm_table is not None:
             tpm_ref = self.save_expression_matrix(tpm_tables,
                                                   expr_set_data,
-                                                  '{0}_TPM_ExpressionMatrix'.format(output_obj_name))
+                                                  '{0}_TPM_ExpressionMatrix'.format(
+                                                      output_obj_name))
         return fpkm_ref, tpm_ref
 
-
-    def get_matrix_stats( self, raw_row ):
+    def get_matrix_stats(self, raw_row):
         """
         returns a list of [ min, max, mean, std.dev, is_data_missing] for one row of conditional 
         expression values
@@ -217,129 +219,132 @@ class ExprMatrixUtils:
         has_missing = "No"
         row = []
         for r in raw_row:
-            if r == None or numpy.isnan( r ):     # careful here - r can be 0 which is a legitimate value
+            if r == None or numpy.isnan(
+                    r):  # careful here - r can be 0 which is a legitimate value
                 has_missing = "Yes"
             else:
                 row.append(r)
 
-        if len( row ) < 1:
-            return( [ 'NA', 'NA', 'NA', 'NA', 'Yes' ] )
+        if len(row) < 1:
+            return (['NA', 'NA', 'NA', 'NA', 'Yes'])
 
-        if len( row ) == 1:
-           sd = 0
+        if len(row) == 1:
+            sd = 0
         else:
-           sd = numpy.std( row, ddof=1 )
-        return( [ min( row ), max( row ), numpy.mean( row ), sd, has_missing ] )
+            sd = numpy.std(row, ddof=1)
+        return ([min(row), max(row), numpy.mean(row), sd, has_missing])
 
-
-    def convert_dem_to_dict( self, dem ):
+    def convert_dem_to_dict(self, dem):
         """
         returns a dict that maps feature_id -> [ fc, q ]
         """
-        row_ids = dem.get( 'row_ids' )
-        vals = dem.get( 'values' )
-  
-        n_rows = len( row_ids )
-        if ( len( vals ) != n_rows ):
-            raise Exception( "length discrepancy in differential expression matrix: {0} row_ids but {1} values".format( n_rows, len( fvals ) ) )
+        row_ids = dem.get('row_ids')
+        vals = dem.get('values')
+
+        n_rows = len(row_ids)
+        if (len(vals) != n_rows):
+            raise Exception(f"length discrepancy in differential expression matrix: {n_rows} "
+                            f"row_ids but {len(vals)} values")
 
         dem_dict = {}
         for _id, val in zip(row_ids, vals):
-            dem_dict[_id] = [ val[0], val[2] ]  # [fc,q]. (not bothering to check for dups here)
+            dem_dict[_id] = [val[0], val[2]]  # [fc,q]. (not bothering to check for dups here)
 
         return dem_dict
 
-
-    def get_enhancedFEM( self, params ):
+    def get_enhancedFEM(self, params):
         """
         implements get_enhancedFilteredExpressionMatrix() method
         """
 
         if 'fem_object_ref' not in params:
-            raise ValueError( "fem_object_ref parameter not given to get_enhancedFilteredExpressionMatrix" )
+            raise ValueError(
+                "fem_object_ref parameter not given to get_enhancedFilteredExpressionMatrix")
 
-        fem_object_ref = params.get( 'fem_object_ref' )
+        fem_object_ref = params.get('fem_object_ref')
 
         fem_obj_ret = self.ws_client.get_objects2(
-                       {'objects': [{'ref': fem_object_ref }]})['data'][0]
-        fem = fem_obj_ret.get( 'data' )
-        prov = fem_obj_ret.get( 'provenance')[0]
+            {'objects': [{'ref': fem_object_ref}]})['data'][0]
+        fem = fem_obj_ret.get('data')
+        prov = fem_obj_ret.get('provenance')[0]
 
         # create the enhanced FEM, starting with the FEM
 
         efem = {}
-        for k in [ 'genome_ref', 'scale', 'type' ]:
-            efem[k] = fem.get( k )
+        for k in ['genome_ref', 'scale', 'type']:
+            efem[k] = fem.get(k)
 
         efem['data'] = {}
-        efem['data']['col_ids'] = [ "description", 
-                                    "fold-change",
-                                    "q-value",
-                                    "min",
-                                    "max",
-                                    "mean",
-                                    "std_dev",
-                                    "is_missing_values" ]
-        efem['data']['column_labels'] =[ "Description", 
+        efem['data']['col_ids'] = ["description",
+                                   "fold-change",
+                                   "q-value",
+                                   "min",
+                                   "max",
+                                   "mean",
+                                   "std_dev",
+                                   "is_missing_values"]
+        efem['data']['column_labels'] = ["Description",
                                          "Fold change",
                                          "Q value",
                                          "Min. expression",
                                          "Max. expression",
                                          "Mean expression",
                                          "Std. dev.",
-                                         "Missing values?" ]
+                                         "Missing values?"]
         fm = fem.get('data')
         efem['data']['row_ids'] = fm.get('row_ids')
-        efem['data']['values' ] = []
-        n_efem_rows = len( efem['data']['row_ids'] )
+        efem['data']['values'] = []
+        n_efem_rows = len(efem['data']['row_ids'])
         fvals = fm.get('values')
-        if ( len( fvals ) != n_efem_rows ):
-            raise Exception( "length discrepancy in filtered expression matrix: {0} row_ids but {1} values".format( n_efem_rows, len( fvals ) ) )
+        if (len(fvals) != n_efem_rows):
+            raise Exception(
+                "length discrepancy in filtered expression matrix: {0} row_ids but {1} values".format(
+                    n_efem_rows, len(fvals)))
 
         # Get genome object and feature descriptions as a handy feature-indexed dict
 
-        feat_dict = self.gaa.get_feature_functions( { 'ref': fem.get( 'genome_ref' ), 'feature_id_list': None } )
+        feat_dict = self.gaa.get_feature_functions(
+            {'ref': fem.get('genome_ref'), 'feature_id_list': None})
 
         # if this FEM has a "resolved_ws_objects" record in its provenance,
         # then that should be a list of one DEM reference from which we get the FC and q values
         # as a feature (=row_id) -indexed dict.
 
-        #if prov.get( 'resolved_ws_objects' ):
+        # if prov.get( 'resolved_ws_objects' ):
         #    dem_ref = prov.get( 'resolved_ws_objects' )[0]
         #    dem_obj_ret = self.dfu.get_objects( {'object_refs': [ dem_ref ] } ).get('data')[0]
         #    dem = dem_obj_ret.get( 'data' )
         #    dem_dict = self.convert_dem_to_dict( dem.get('data') )  # convert to dictionary for quick lookups
-        if fem.get( 'diff_expr_matrix_ref' ):
-            dem_ref = fem.get( 'diff_expr_matrix_ref' )
-            dem_obj_ret = self.dfu.get_objects( {'object_refs': [ dem_ref ] } ).get('data')[0]
-            dem = dem_obj_ret.get( 'data' )
-            dem_dict = self.convert_dem_to_dict( dem.get('data') )  # convert to dictionary for quick lookups
+        if fem.get('diff_expr_matrix_ref'):
+            dem_ref = fem.get('diff_expr_matrix_ref')
+            dem_obj_ret = self.dfu.get_objects({'object_refs': [dem_ref]}).get('data')[0]
+            dem = dem_obj_ret.get('data')
+            dem_dict = self.convert_dem_to_dict(
+                dem.get('data'))  # convert to dictionary for quick lookups
         else:
-            dem_dict = {}   # empty dictionary
+            dem_dict = {}  # empty dictionary
 
         # for each row
 
-        for row_id, fm_val_row in zip( fm.get('row_ids'), fvals ):
+        for row_id, fm_val_row in zip(fm.get('row_ids'), fvals):
 
             # make a new row with NA for description, FC and q
 
-            new_values_row =  [ 'NA', 'NA', 'NA' ] + self.get_matrix_stats( fm_val_row )
+            new_values_row = ['NA', 'NA', 'NA'] + self.get_matrix_stats(fm_val_row)
 
             # if we have a description for this feature (row_id) put it in the first column
 
-            desc = feat_dict.get( row_id )
+            desc = feat_dict.get(row_id)
             if desc:
-                new_values_row[0] = desc     # leave as 'NA' if no entry in feat_dict
+                new_values_row[0] = desc  # leave as 'NA' if no entry in feat_dict
 
             # if we have a DEM entry for this row, put FC and q into 2nd and 3rd columns
-            d = dem_dict.get( row_id )
+            d = dem_dict.get(row_id)
             if d:
                 new_values_row[1], new_values_row[2] = d
 
             # finally, add this row to the eFEM
 
-            efem['data']['values'].append( new_values_row )
-
+            efem['data']['values'].append(new_values_row)
 
         return efem
-

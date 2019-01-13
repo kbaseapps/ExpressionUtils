@@ -19,15 +19,15 @@ LEVELS = {'debug': logging.DEBUG,
 def log(message, level=logging.INFO, logger=None):
     if logger is None:
         if level == logging.DEBUG:
-            print('\nDEBUG: ' + message + '\n')
+            print(('\nDEBUG: ' + message + '\n'))
         elif level == logging.INFO:
-            print('\nINFO: ' + message + '\n')
+            print(('\nINFO: ' + message + '\n'))
         elif level == logging.WARNING:
-            print('\nWARNING: ' + message + '\n')
+            print(('\nWARNING: ' + message + '\n'))
         elif level == logging.ERROR:
-            print('\nERROR: ' + message + '\n')
+            print(('\nERROR: ' + message + '\n'))
         elif level == logging.CRITICAL:
-            print('\nCRITICAL: ' + message + '\n')
+            print(('\nCRITICAL: ' + message + '\n'))
     else:
         logger.log(level, '\n' + message + '\n')
 
@@ -75,7 +75,7 @@ def runProgram(logger=None,
 
     # Construct shell command
     cmdStr = "%s %s" % (progPath, argStr)
-    print "Executing : " + cmdStr
+    print("Executing : " + cmdStr)
     if logger is not None:
         logger.info("Executing : " + cmdStr)
     # if working_dir is None:
@@ -97,11 +97,11 @@ def runProgram(logger=None,
     if logger is not None and result is not None and len(result) > 0:
         logger.info(result)
     else:
-        print result
+        print(result)
     if logger is not None and stderr is not None and len(stderr) > 0:
         logger.info(stderr)
     else:
-        print stderr
+        print(stderr)
 
     # Check returncode for success/failure
     if process.returncode != 0:
