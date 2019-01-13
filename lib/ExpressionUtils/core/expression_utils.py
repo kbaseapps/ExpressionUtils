@@ -1,8 +1,10 @@
-import math
 import logging
-import time
+import math
 import sys
-import urllib
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 from installed_clients.GenomeSearchUtilClient import GenomeSearchUtil
 
@@ -38,8 +40,7 @@ class ExpressionUtils:
                                            'limit': feature_num,
                                            'sort_by': [['feature_id', True]]})['features']
 
-        features_ids = map(lambda genome_feature: genome_feature.get('feature_id'),
-                           genome_features)
+        features_ids = [genome_feature.get('feature_id') for genome_feature in genome_features]
 
         return list(set(features_ids))
 
@@ -69,9 +70,9 @@ class ExpressionUtils:
             with open(filepath, 'r') as file:
                 header = file.readline()
                 fpkm_col = header.strip().split('\t').index('FPKM')
-                self.logger.info('Using FPKM at col ' + str(fpkm_col) + ' in ' + str(filepath))
+                self.logger.info(f'Using FPKM at col {fpkm_col} in {filepath}')
         except:
-            self.logger.error('Unable to find an FPKM column in the specified file: ' + str(filepath))
+            self.logger.error(f'Unable to find an FPKM column in the specified file: {filepath}')
 
         feature_ids = self._get_feature_ids(genome_ref)
 
@@ -79,14 +80,14 @@ class ExpressionUtils:
         with open(filepath) as f:
             next(f)
             for line in f:
-                larr = urllib.unquote(line).split("\t")
+                larr = urllib.parse.unquote(line).split("\t")
 
                 if larr[id_col] in feature_ids:
                     gene_id = larr[id_col]
                 elif larr[1] in feature_ids:
                     gene_id = larr[1]
                 else:
-                    error_msg = 'Line does not include a known feature: {}'.format(line)
+                    error_msg = f'Line does not include a known feature: {line}'
                     raise ValueError(error_msg)
 
                 if gene_id != "":

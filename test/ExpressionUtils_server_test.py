@@ -1,46 +1,63 @@
 # -*- coding: utf-8 -*-
-import unittest
-import os  # noqa: F401
-import time
-import shutil
 import hashlib
 import inspect
-import requests
+import os  # noqa: F401
+import shutil
 import tempfile
-import glob
-from zipfile import ZipFile
+import time
+import unittest
+from configparser import ConfigParser  # py3
 from datetime import datetime
 from distutils.dir_util import copy_tree
-from mock import patch
-
 from os import environ
-try:
-    from ConfigParser import ConfigParser  # py2
-except BaseException:
-    from configparser import ConfigParser  # py3
+from pprint import pprint
+from unittest.mock import patch
+from zipfile import ZipFile
 
-from pprint import pprint  # noqa: F401
+import requests
 
-from biokbase.workspace.client import Workspace as workspaceService
-from installed_clients.WorkspaceClient import Workspace
-from installed_clients.DataFileUtilClient import DataFileUtil
-from installed_clients.ReadsUtilsClient import ReadsUtils
-from installed_clients.AssemblyUtilClient import AssemblyUtil
-from installed_clients.GenomeFileUtilClient import GenomeFileUtil
-from installed_clients.GenomeAnnotationApiServiceClient import GenomeAnnotationAPI
-from installed_clients.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
-from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport
 from ExpressionUtils.ExpressionUtilsImpl import ExpressionUtils
 from ExpressionUtils.ExpressionUtilsServer import MethodContext
 from ExpressionUtils.authclient import KBaseAuth as _KBaseAuth
 from ExpressionUtils.core.expression_utils import ExpressionUtils as Expression_Utils
-
+from installed_clients.AbstractHandleClient import AbstractHandle as HandleService
+from installed_clients.AssemblyUtilClient import AssemblyUtil
+from installed_clients.DataFileUtilClient import DataFileUtil
+from installed_clients.GenomeAnnotationApiServiceClient import GenomeAnnotationAPI
+from installed_clients.GenomeFileUtilClient import GenomeFileUtil
+from installed_clients.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
+from installed_clients.ReadsUtilsClient import ReadsUtils
+from installed_clients.WorkspaceClient import Workspace
+from installed_clients.WorkspaceClient import Workspace as workspaceService
 
 
 def dictmerge(x, y):
     z = x.copy()
     z.update(y)
     return z
+
+
+def mock_get_feature_ids(_):
+    print('Mocking _get_feature_ids')
+
+    feature_ids = []
+    # includes feature ids in stringtie.genes.fpkm_tracking
+    stringtie_feature_ids = ['AT1G01010', 'AT1G01020', 'AT1G01030', 'AT1G01040', 'AT1G01050',
+                             'AT1G01060', 'AT1G01070', 'AT1G01080', 'AT1G01090', 'AT1G01100']
+
+    feature_ids += stringtie_feature_ids
+
+    # includes feature ids in cufflinks.genes.fpkm_tracking
+    cufflinks_feature_ids = ['AT1G29740', 'AT1G29730', 'RKF1', 'SEI2', 'AT1G29770',
+                             'AT1G29775', 'AT1G29780', 'AT1G29790', 'AT1G29800', 'AT1G29810']
+
+    feature_ids += cufflinks_feature_ids
+
+    # includes features in t_data.ctab
+    feature_ids += ['AT1G01010.1', 'AT1G01020.1', 'AT1G01020.2',
+                    'AT1G01030.1', 'AT1G01040.1', 'AT1G01046.1']
+
+    return feature_ids
 
 
 class ExpressionUtilsTest(unittest.TestCase):
@@ -327,28 +344,6 @@ class ExpressionUtilsTest(unittest.TestCase):
         res = cls.save_ws_obj(obj, wsobjname, "KBaseRNASeq.GFFAnnotation")
         return cls.make_ref(res)
 
-    def mock_get_feature_ids(genome_ref):
-        print 'Mocking _get_feature_ids'
-
-        feature_ids = []
-        # includes feature ids in stringtie.genes.fpkm_tracking
-        stringtie_feature_ids = ['AT1G01010', 'AT1G01020', 'AT1G01030', 'AT1G01040', 'AT1G01050', 
-                                 'AT1G01060', 'AT1G01070', 'AT1G01080', 'AT1G01090', 'AT1G01100']
-
-        feature_ids += stringtie_feature_ids
-
-        # includes feature ids in cufflinks.genes.fpkm_tracking
-        cufflinks_feature_ids = ['AT1G29740', 'AT1G29730', 'RKF1', 'SEI2', 'AT1G29770',
-                                 'AT1G29775', 'AT1G29780', 'AT1G29790', 'AT1G29800', 'AT1G29810']
-
-        feature_ids += cufflinks_feature_ids
-
-        # includes features in t_data.ctab
-        feature_ids += ['AT1G01010.1', 'AT1G01020.1', 'AT1G01020.2',
-                        'AT1G01030.1', 'AT1G01040.1', 'AT1G01046.1']
-
-        return feature_ids
-
     @classmethod
     @patch.object(Expression_Utils, "_get_feature_ids", side_effect=mock_get_feature_ids)
     def setupTestData(cls, _get_feature_ids):
@@ -404,7 +399,6 @@ class ExpressionUtilsTest(unittest.TestCase):
             'transcripts': 1
             }
 
-
         cls.getImpl().upload_expression(cls.ctx, cls.stringtie_params)
         cls.getImpl().upload_expression(cls.ctx, cls.cufflinks_params)
         cls.getImpl().upload_expression(cls.ctx, cls.transcript_params)
@@ -429,7 +423,7 @@ class ExpressionUtilsTest(unittest.TestCase):
 
         test_name = inspect.stack()[1][3]
         print('\n**** starting expected upload expression success test: ' + test_name + ' ***\n')
-        print('---------------------------------------------------------------------------------------')
+        print('---------------------------------------------------------------------------------')
         obj = self.dfu.get_objects(
             {'object_refs': [params.get('destination_ref')]})['data'][0]
 
@@ -441,7 +435,7 @@ class ExpressionUtilsTest(unittest.TestCase):
         d = obj['data']
         #self.assertEqual(d['genome_ref'], self.getWsName() + '/test_genome')
         self.assertEqual(d['condition'], 'test_condition')
-        self.assertEqual(d['mapped_rnaseq_alignment'].keys()[0],
+        self.assertEqual(list(d['mapped_rnaseq_alignment'].keys())[0],
                          self.getWsName() + '/test_reads')
         f = d['file']
         self.assertEqual(f['file_name'], expected_zip)
@@ -513,7 +507,7 @@ class ExpressionUtilsTest(unittest.TestCase):
         headers = {'Authorization': 'OAuth ' + self.token}
         r = requests.get(node_url, headers=headers, allow_redirects=True)
         fn = r.json()['data']['file']['name']
-        self.assertEquals(fn, uploaded_zip)
+        self.assertEqual(fn, uploaded_zip)
         temp_dir = tempfile.mkdtemp(dir=self.scratch)
         export_dir = upload_dir.replace('upload', 'export')
         export_dir_path = os.path.join(temp_dir, export_dir)
@@ -555,15 +549,13 @@ class ExpressionUtilsTest(unittest.TestCase):
         test_name = inspect.stack()[1][3]
         print('\n*** starting expected upload fail test: ' + test_name + ' **')
 
-        with self.assertRaises(exception) as context:
-            self.getImpl().upload_expression(self.ctx, params)
         if do_startswith:
-            self.assertTrue(str(context.exception.message).startswith(error),
-                            "Error message {} does not start with {}".format(
-                                str(context.exception.message),
-                                error))
+            error = f"^{error}"
         else:
-            self.assertEqual(error, str(context.exception.message))
+            error = f"^{error}$"
+
+        with self.assertRaisesRegex(exception, error):
+            self.getImpl().upload_expression(self.ctx, params)
 
     def test_upload_fail_no_dst_ref(self):
         self.fail_upload_expression(

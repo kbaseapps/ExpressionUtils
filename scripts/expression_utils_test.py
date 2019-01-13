@@ -1,22 +1,17 @@
 # -*- coding: utf-8 -*-
-import unittest
 import logging
-import sys
 import os  # noqa: F401
+import sys
 import time
-from mock import patch
-
+import unittest
+from configparser import ConfigParser
 from os import environ
-try:
-    from ConfigParser import ConfigParser  # py2
-except BaseException:
-    from configparser import ConfigParser  # py3
+from unittest.mock import patch
 
-from biokbase.workspace.client import Workspace as workspaceService
 from ExpressionUtils.ExpressionUtilsServer import MethodContext
 from ExpressionUtils.authclient import KBaseAuth as _KBaseAuth
-
 from ExpressionUtils.core.expression_utils import ExpressionUtils
+from installed_clients.WorkspaceClient import Workspace as workspaceService
 
 
 class GFFUtilsTest(unittest.TestCase):
@@ -63,7 +58,7 @@ class GFFUtilsTest(unittest.TestCase):
         cls.scratch = cls.cfg['scratch']
 
     def mock_get_feature_ids(genome_ref):
-        print 'Mocking _get_feature_ids'
+        print('Mocking _get_feature_ids')
 
         feature_ids = []
         # includes feature ids in stringtie.genes.fpkm_tracking
@@ -90,7 +85,7 @@ class GFFUtilsTest(unittest.TestCase):
 
         exp_utils = ExpressionUtils(self.__class__.cfg)  # no logger specified
 
-        with self.assertRaisesRegexp(ValueError, 'Line does not include a known feature'):
+        with self.assertRaisesRegex(ValueError, 'Line does not include a known feature'):
             exp_utils.get_expression_levels(filepath='data/expression_utils/missing_gene.genes.fpkm_tracking',
                                             genome_ref='')
 
@@ -103,8 +98,8 @@ class GFFUtilsTest(unittest.TestCase):
             filepath='data/expression_utils/cufflinks.genes.fpkm_tracking',
             genome_ref='')
 
-        self.assertEquals(10, len(fpkm_dict))
-        self.assertEquals(10, len(tpm_dict))
+        self.assertEqual(10, len(fpkm_dict))
+        self.assertEqual(10, len(tpm_dict))
 
     @patch.object(ExpressionUtils, "_get_feature_ids", side_effect=mock_get_feature_ids)
     def test_get_expression_levels_stringtie(self, _get_feature_ids):
@@ -114,8 +109,8 @@ class GFFUtilsTest(unittest.TestCase):
             filepath='data/expression_utils/stringtie.genes.fpkm_tracking',
             genome_ref='')
 
-        self.assertEquals(10, len(fpkm_dict))
-        self.assertEquals(10, len(tpm_dict))
+        self.assertEqual(10, len(fpkm_dict))
+        self.assertEqual(10, len(tpm_dict))
 
     @patch.object(ExpressionUtils, "_get_feature_ids", side_effect=mock_get_feature_ids)
     def test_get_expression_levels_zero_sum_fpkm(self, _get_feature_ids):
@@ -125,13 +120,13 @@ class GFFUtilsTest(unittest.TestCase):
             filepath='data/expression_utils/zero_sum_fpkm.genes.fpkm_tracking',
             genome_ref='')
 
-        self.assertEquals(10, len(fpkm_dict))
-        self.assertEquals(10, len(tpm_dict))
+        self.assertEqual(10, len(fpkm_dict))
+        self.assertEqual(10, len(tpm_dict))
 
         sum_tpm = 0.0
         for tpm in tpm_dict.values():
             sum_tpm += tpm
-        self.assertEquals(0.0, sum_tpm)
+        self.assertEqual(0.0, sum_tpm)
 
     @patch.object(ExpressionUtils, "_get_feature_ids",
                   side_effect=mock_get_feature_ids)

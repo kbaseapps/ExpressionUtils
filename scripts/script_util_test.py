@@ -1,32 +1,29 @@
 # -*- coding: utf-8 -*-
-import unittest
 import logging
-import sys
 import os  # noqa: F401
+import sys
 import time
-import glob
-
+import unittest
 from os import environ
+
+from ExpressionUtils.core import script_utils
+
 try:
-    from ConfigParser import ConfigParser  # py2
+    from configparser import ConfigParser  # py2
 except BaseException:
     from configparser import ConfigParser  # py3
 
-from pprint import pprint  # noqa: F401
-
-from biokbase.workspace.client import Workspace as workspaceService
+from installed_clients.WorkspaceClient import Workspace as workspaceService
 from ExpressionUtils.ExpressionUtilsImpl import ExpressionUtils
 from ExpressionUtils.ExpressionUtilsServer import MethodContext
 from ExpressionUtils.authclient import KBaseAuth as _KBaseAuth
 
-from ExpressionUtils.core.table_maker import TableMaker
 
-
-class TableMakerTest(unittest.TestCase):
+class ScriptUtilsTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.__LOGGER = logging.getLogger('TableMaker_test')
+        cls.__LOGGER = logging.getLogger('ScriptUtils_test')
         cls.__LOGGER.setLevel(logging.INFO)
         streamHandler = logging.StreamHandler(sys.stdout)
         formatter = logging.Formatter(
@@ -64,27 +61,11 @@ class TableMakerTest(unittest.TestCase):
         cls.scratch = cls.cfg['scratch']
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
 
-    def test_build_ctab_files(self):
-        output_dir = '/kb/module/work/tablemaker_test'
+    def test_log(self):
+        script_utils.log("printing test message...")
+        script_utils.log("logging test message...", logging.WARNING, self.__class__.__LOGGER)
 
-        try:
-            os.mkdir(output_dir)
-        except OSError:
-            pass  # dir already exists
-
-        map(os.remove, glob.glob(output_dir + '/*.ctab'))
-
-        tablemaker = TableMaker(self.__class__.cfg, self.__class__.__LOGGER)
-
-        # ref_genome_path, alignment_path, output_dir
-        result = tablemaker.build_ctab_files(
-            ref_genome_path='data/tablemaker/at_chrom1_section.gtf',
-            alignment_path='data/tablemaker/accepted_hits_sorted.bam',
-                            output_dir=output_dir)
-
-        self.assertEquals(result, 0)
-        self.assertTrue(os.path.exists(os.path.join(output_dir, 'e2t.ctab')))
-        self.assertTrue(os.path.exists(os.path.join(output_dir, 'e_data.ctab')))
-        self.assertTrue(os.path.exists(os.path.join(output_dir, 'i2t.ctab')))
-        self.assertTrue(os.path.exists(os.path.join(output_dir, 'i_data.ctab')))
-        self.assertTrue(os.path.exists(os.path.join(output_dir, 't_data.ctab')))
+    def test_whereis(self):
+        self.assertIsNone(script_utils.whereis('no_such_program'),
+                          'wat! there is a commandline program called no_such_program!')
+        self.assertEqual(script_utils.whereis('ls'), '/bin/ls', 'ls program not found in path!')

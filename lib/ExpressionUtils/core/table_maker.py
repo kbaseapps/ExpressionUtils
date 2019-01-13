@@ -1,5 +1,5 @@
 import logging
-from script_utils import runProgram, log
+from .script_utils import runProgram, log
 
 
 class TableMaker:
@@ -26,12 +26,12 @@ class TableMaker:
         :returns 0 if successful, else 1
         """
         print('Running tablemaker...')
-        print "Args passed : ref_genome_path: {0} , alignment_path: {1} , output_dir: {2} , " \
-              "num_threads: {3} ".format(ref_genome_path, alignment_path, output_dir, num_threads)
+        print("Args passed : ref_genome_path: {0} , alignment_path: {1} , output_dir: {2} , " \
+              "num_threads: {3} ".format(ref_genome_path, alignment_path, output_dir, num_threads))
         tm_args = " -p {0} -o {1} -q -W -G {2} {3}".format(str(num_threads), output_dir,
                                                            ref_genome_path, alignment_path)
         try:
-            print "Executing: tablemaker {0}".format(tm_args)
+            print("Executing: tablemaker {0}".format(tm_args))
             runProgram(logger=self.logger, progName="tablemaker", argStr=tm_args)
         except Exception as ex:
             log("Error executing tablemaker {0}. {1}".format(tm_args, ex.message), logging.ERROR)

@@ -1,27 +1,20 @@
 # -*- coding: utf-8 -*-
-import unittest
+import json
 import os  # noqa: F401
 import time
-import inspect
-import shutil
-import json
-
+import unittest
+from configparser import ConfigParser  # py3
 from os import environ
+from pprint import pformat
 
-try:
-    from ConfigParser import ConfigParser  # py2
-except BaseException:
-    from configparser import ConfigParser  # py3
-
-from pprint import pprint, pformat  # noqa: F401
-
-from biokbase.workspace.client import Workspace as workspaceService
-from installed_clients.DataFileUtilClient import DataFileUtil
-from installed_clients.GenomeFileUtilClient import GenomeFileUtil
 from ExpressionUtils.ExpressionUtilsImpl import ExpressionUtils
 from ExpressionUtils.ExpressionUtilsServer import MethodContext
 from ExpressionUtils.authclient import KBaseAuth as _KBaseAuth
+from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.GenomeAnnotationApiClient import GenomeAnnotationAPI
+from installed_clients.GenomeFileUtilClient import GenomeFileUtil
+from installed_clients.WorkspaceClient import Workspace as workspaceService
+
 
 class ExprMatrixUtilsTest(unittest.TestCase):
     @classmethod
@@ -157,29 +150,29 @@ class ExprMatrixUtilsTest(unittest.TestCase):
 
     def get_enhancedFEM_tests( self ):
 
-        print "### running enhanced FEM tests...."
+        print("### running enhanced FEM tests....")
 
         # this should succeed - good provenance link to DEM
         
-        print "### testing good provenance...."
+        print("### testing good provenance....")
         ret = self.getImpl().get_enhancedFilteredExpressionMatrix( self.ctx, 
                                                             {'fem_object_ref': self.fem_dem_ref} )
         self.assertFalse( self.fc_and_q_columns_are_all_NA( ret[0].get('enhanced_FEM' ) ) )
-        print "### ret is {0}".format( pformat( ret ) )
+        print("### ret is {0}".format( pformat( ret ) ))
 
         # this should succeed - no provenance link to DEM
 
-        print "### testing, no provenance...."
+        print("### testing, no provenance....")
         ret = self.getImpl().get_enhancedFilteredExpressionMatrix( self.ctx, 
                                                             {'fem_object_ref': self.fem_no_dem_ref} )
         self.assertTrue( self.fc_and_q_columns_are_all_NA( ret[0].get('enhanced_FEM' ) ) )
-        print "### ret is {0}".format( pformat( ret ) )
+        print("### ret is {0}".format( pformat( ret ) ))
 
         # this should fail: the one input parameter is missing..
 
-        print "### fail check on missing parameter field...."
-        with self.assertRaisesRegexp(
+        print("### fail check on missing parameter field....")
+        with self.assertRaisesRegex(
                       ValueError, 'fem_object_ref parameter not given to get_enhancedFilteredExpressionMatrix' ):
              self.getImpl().get_enhancedFilteredExpressionMatrix( self.ctx, 
                                                             {'nope': 'nope'} )
-        print "### finished running enhanced FEM tests...."
+        print("### finished running enhanced FEM tests....")

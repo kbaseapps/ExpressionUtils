@@ -1,25 +1,20 @@
 # -*- coding: utf-8 -*-
-import unittest
-import os  # noqa: F401
-import time
 import inspect
+import os  # noqa: F401
 import shutil
-
+import time
+import unittest
+from configparser import ConfigParser
 from os import environ
+from pprint import pprint
 
-try:
-    from ConfigParser import ConfigParser  # py2
-except BaseException:
-    from configparser import ConfigParser  # py3
-
-from pprint import pprint  # noqa: F401
-
-from biokbase.workspace.client import Workspace as workspaceService
-from installed_clients.DataFileUtilClient import DataFileUtil
-from installed_clients.GenomeFileUtilClient import GenomeFileUtil
 from ExpressionUtils.ExpressionUtilsImpl import ExpressionUtils
 from ExpressionUtils.ExpressionUtilsServer import MethodContext
 from ExpressionUtils.authclient import KBaseAuth as _KBaseAuth
+from installed_clients.DataFileUtilClient import DataFileUtil
+from installed_clients.GenomeFileUtilClient import GenomeFileUtil
+from installed_clients.WorkspaceClient import Workspace as workspaceService
+
 
 class ExprMatrixUtilsTest(unittest.TestCase):
     @classmethod
@@ -99,7 +94,7 @@ class ExprMatrixUtilsTest(unittest.TestCase):
     def get_expr_matrix_success(self, input_exprset_ref, output_obj_name):
 
         test_name = inspect.stack()[1][3]
-        print('\n*** starting expected get expr matrix success test: ' + test_name + ' *****************')
+        print(f'\n*** starting expected get expr matrix success test: {test_name} ***************')
 
         params = {'expressionset_ref': input_exprset_ref,
                   'workspace_name': self.getWsName(),
@@ -165,17 +160,15 @@ class ExprMatrixUtilsTest(unittest.TestCase):
     def fail_getExprMat(self, params, error, exception=ValueError, do_startswith=False):
 
         test_name = inspect.stack()[1][3]
-        print('\n*** starting expected get Expression Matrix fail test: ' + test_name + ' **********************')
+        print(f'\n*** starting expected get Expression Matrix fail test: {test_name}*************')
 
-        with self.assertRaises(exception) as context:
-            self.getImpl().get_expressionMatrix(self.ctx, params)
         if do_startswith:
-            self.assertTrue(str(context.exception.message).startswith(error),
-                            "Error message {} does not start with {}".format(
-                                str(context.exception.message),
-                                error))
+            error = f"^{error}"
         else:
-            self.assertEqual(error, str(context.exception.message))
+            error = f"^{error}$"
+
+        with self.assertRaisesRegex(exception, error):
+            self.getImpl().get_expressionMatrix(self.ctx, params)
 
     def test_getExprMat_fail_no_ws_name(self):
         self.fail_getExprMat(
