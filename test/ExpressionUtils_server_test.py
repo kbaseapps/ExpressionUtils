@@ -545,15 +545,10 @@ class ExpressionUtilsTest(unittest.TestCase):
                                        self.upload_cufflinks_dir_path,
                                        self.uploaded_cufflinks_zip)
 
-    def fail_upload_expression(self, params, error, exception=ValueError, do_startswith=False):
+    def fail_upload_expression(self, params, error, exception=ValueError):
 
         test_name = inspect.stack()[1][3]
         print('\n*** starting expected upload fail test: ' + test_name + ' **')
-
-        if do_startswith:
-            error = f"^{error}"
-        else:
-            error = f"^{error}$"
 
         with self.assertRaisesRegex(exception, error):
             self.getImpl().upload_expression(self.ctx, params)
