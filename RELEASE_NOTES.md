@@ -1,3 +1,6 @@
+### Version 0.1.8
+- Changed SHOCK upload in unit tests to DataFileUtil.file_to_shock()
+
 ### Version 0.1.5
 - Update the baseclients for all modules used to resolve _check_job BADSTATUSCODE failure
 

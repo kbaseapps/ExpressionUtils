@@ -8,8 +8,8 @@ service-language:
     python
 
 module-version:
-    0.1.7
+    0.1.8
 
 owners:
-    [jjeffryes, mccorkle]
+    [jjeffryes, mccorkle, ziming_yang_1]
 
