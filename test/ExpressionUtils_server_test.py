@@ -178,7 +178,6 @@ class ExpressionUtilsTest(unittest.TestCase):
         if not hasattr(cls, 'shock_ids'):
             cls.shock_ids = []
         cls.shock_ids.append(shock_info['shock_id'])
-        print("!!!!shock_info",shock_info)
         return shock_info
 
     @classmethod
@@ -322,9 +321,6 @@ class ExpressionUtilsTest(unittest.TestCase):
 
     @classmethod
     def upload_annotation(cls, wsobjname, file_name):
-
-        # gtf_path = os.path.join(cls.scratch, file_name)
-        # shutil.copy(os.path.join('data', file_name), gtf_path)
         id, handle_id, md5, size = cls.upload_file_to_shock_and_get_handle(os.path.join('data', file_name))
 
         a_handle = {
