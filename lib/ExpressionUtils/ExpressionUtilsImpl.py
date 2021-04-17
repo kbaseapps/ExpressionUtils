@@ -133,13 +133,13 @@ class ExpressionUtils:
             return params[self.PARAM_IN_GENOME_REF]
 
         obj_type = self._get_ws_info(assembly_or_genome_ref)[2]
-        if obj_type.startswith('KBaseGenomes.Genome'):
+        if obj_type.startswith('KBaseGenomes.Genome') or obj_type.startswith('KBaseMetagenomes.AnnotatedMetagenomeAssembly'):
             return assembly_or_genome_ref
 
         raise ValueError('Alignment object does not contain genome_ref; '
                          '"{}" parameter is required'.format(self.PARAM_IN_GENOME_REF))
 
-    def _get_expression_levels(self, source_dir, genome_ref, transcripts=False):
+    def _get_expression_levels(self, source_dir, genome_or_ama_ref, transcripts=False):
 
         fpkm_file_path = os.path.join(source_dir, 'genes.fpkm_tracking')
         if transcripts:
@@ -152,7 +152,7 @@ class ExpressionUtils:
         self.__LOGGER.info('Generating expression levels from {}'
                            .format(fpkm_file_path))
         return self.expression_utils.get_expression_levels(fpkm_file_path,
-                                                           genome_ref, id_col)
+                                                           genome_or_ama_ref, id_col)
 
     def _gen_ctab_files(self, params, alignment_ref):
 
@@ -272,10 +272,10 @@ class ExpressionUtils:
         alignment = alignment_obj['data']
         assembly_or_genome_ref = alignment['genome_id']
 
-        genome_ref = self._get_genome_ref(assembly_or_genome_ref, params)
+        genome_or_ama_ref = self._get_genome_ref(assembly_or_genome_ref, params)
 
         expression_levels, tpm_expression_levels = self._get_expression_levels(
-            source_dir, genome_ref, params.get(self.PARAM_IN_TRANSCRIPTS))
+            source_dir, genome_or_ama_ref, params.get(self.PARAM_IN_TRANSCRIPTS))
 
         self._gen_ctab_files(params, alignment_ref)
 
@@ -296,7 +296,7 @@ class ExpressionUtils:
 
         expression_data = {
                            'numerical_interpretation': 'FPKM',
-                           'genome_id': genome_ref,
+                           'genome_id': genome_or_ama_ref,
                            'mapped_rnaseq_alignment': {alignment['read_sample_id']: alignment_ref},
                            'condition': alignment['condition'],
                            'file': file_handle,
