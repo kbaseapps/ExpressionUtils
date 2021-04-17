@@ -36,12 +36,11 @@ class ExpressionUtils:
         self.logger.info("Matching to features from genome or AMA {}"
                          .format(genome_or_ama_ref))
 
-        ref = self.ws.get_object_subset(
-            [{"ref": genome_or_ama_ref,
-             "included": ["contig_ids", "features_handle_ref"]}]
-        )
-
-        obj_type = ref[0]['info'][2]
+        obj_info = self.ws.get_objects2({
+            'objects': [{'ref': genome_or_ama_ref}],
+            'no_data': 1
+        })
+        obj_type = obj_info.get('data', [{}])[0].get('info', [None]*3)[2]
 
         if 'KBaseGenomes.Genome' in obj_type:
             feature_num = self.gsu.search({'ref': genome_or_ama_ref})['num_found']
