@@ -28,7 +28,7 @@ module ExpressionUtils {
                                             The object ref is 'ws_name_or_id/obj_name_or_id'
                                             where ws_name_or_id is the workspace name or id
                                             and obj_name_or_id is the object name or id
-                                            
+
         string   source_dir             -   directory with the files to be uploaded
         string   alignment_ref          -   alignment workspace object reference
     **/
@@ -56,13 +56,14 @@ module ExpressionUtils {
         string   source;                /*  Optional */
         string   external_source_date;	/*  Optional */
         string   processing_comments;	/*  Optional */
-
+        boolean  generate_data_only;    /*  Optional - generate expression obj data only without saving to the workspace*/
     }  UploadExpressionParams;
 
     /**     Output from upload expression    **/
 
     typedef structure {
         string   obj_ref;
+        mapping<string, string> obj_data;
      }  UploadExpressionOutput;
 
     /**  Uploads the expression  **/
@@ -112,7 +113,7 @@ module ExpressionUtils {
      } ExportOutput;
 
     /** Wrapper function for use by in-narrative downloaders to download expressions from shock **/
- 
+
     funcdef export_expression(ExportParams params)
                      returns (ExportOutput output)
                      authentication required;
@@ -161,5 +162,5 @@ module ExpressionUtils {
     funcdef  get_enhancedFilteredExpressionMatrix( getEnhancedFEMParams params )
                                    returns (getEnhancedFEMOutput)
                                    authentication required;
-                                    
+
 };
