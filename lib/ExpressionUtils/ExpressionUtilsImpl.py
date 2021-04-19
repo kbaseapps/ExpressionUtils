@@ -29,7 +29,7 @@ class ExpressionUtils:
     ExpressionUtils
 
     Module Description:
-    
+
     '''
 
     ######## WARNING FOR GEVENT USERS ####### noqa
@@ -38,9 +38,9 @@ class ExpressionUtils:
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.1.2"
-    GIT_URL = "git@github.com:sean-mccorkle/ExpressionUtils.git"
-    GIT_COMMIT_HASH = "d18d7ff875c006e2b6cb6a3888a3e8d507e3269d"
+    VERSION = "0.1.9"
+    GIT_URL = "git@github.com:Tianhao-Gu/ExpressionUtils.git"
+    GIT_COMMIT_HASH = "7ba76763dd65df161120a2b70c12a2f5b8264182"
 
     #BEGIN_CLASS_HEADER
 
@@ -133,13 +133,13 @@ class ExpressionUtils:
             return params[self.PARAM_IN_GENOME_REF]
 
         obj_type = self._get_ws_info(assembly_or_genome_ref)[2]
-        if obj_type.startswith('KBaseGenomes.Genome'):
+        if obj_type.startswith('KBaseGenomes.Genome') or obj_type.startswith('KBaseMetagenomes.AnnotatedMetagenomeAssembly'):
             return assembly_or_genome_ref
 
         raise ValueError('Alignment object does not contain genome_ref; '
                          '"{}" parameter is required'.format(self.PARAM_IN_GENOME_REF))
 
-    def _get_expression_levels(self, source_dir, genome_ref, transcripts=False):
+    def _get_expression_levels(self, source_dir, genome_or_ama_ref, transcripts=False):
 
         fpkm_file_path = os.path.join(source_dir, 'genes.fpkm_tracking')
         if transcripts:
@@ -152,7 +152,7 @@ class ExpressionUtils:
         self.__LOGGER.info('Generating expression levels from {}'
                            .format(fpkm_file_path))
         return self.expression_utils.get_expression_levels(fpkm_file_path,
-                                                           genome_ref, id_col)
+                                                           genome_or_ama_ref, id_col)
 
     def _gen_ctab_files(self, params, alignment_ref):
 
@@ -230,13 +230,13 @@ class ExpressionUtils:
     def upload_expression(self, ctx, params):
         """
         Uploads the expression  *
-        :param params: instance of type "UploadExpressionParams" (*   
+        :param params: instance of type "UploadExpressionParams" (*
            Required input parameters for uploading a reads expression data
            string   destination_ref        -   object reference of expression
            data. The object ref is 'ws_name_or_id/obj_name_or_id' where
            ws_name_or_id is the workspace name or id and obj_name_or_id is
-           the object name or id string   source_dir             -  
-           directory with the files to be uploaded string   alignment_ref    
+           the object name or id string   source_dir             -
+           directory with the files to be uploaded string   alignment_ref
            -   alignment workspace object reference *) -> structure:
            parameter "destination_ref" of String, parameter "source_dir" of
            String, parameter "alignment_ref" of String, parameter
@@ -247,10 +247,11 @@ class ExpressionUtils:
            "original_median" of Double, parameter "description" of String,
            parameter "platform" of String, parameter "source" of String,
            parameter "external_source_date" of String, parameter
-           "processing_comments" of String
+           "processing_comments" of String, parameter "generate_data_only" of
+           type "boolean" (A boolean - 0 for false, 1 for true. @range (0, 1))
         :returns: instance of type "UploadExpressionOutput" (*     Output
            from upload expression    *) -> structure: parameter "obj_ref" of
-           String
+           String, parameter "obj_data" of mapping from String to String
         """
         # ctx is the context object
         # return variables are: returnVal
@@ -271,10 +272,10 @@ class ExpressionUtils:
         alignment = alignment_obj['data']
         assembly_or_genome_ref = alignment['genome_id']
 
-        genome_ref = self._get_genome_ref(assembly_or_genome_ref, params)
+        genome_or_ama_ref = self._get_genome_ref(assembly_or_genome_ref, params)
 
         expression_levels, tpm_expression_levels = self._get_expression_levels(
-            source_dir, genome_ref, params.get(self.PARAM_IN_TRANSCRIPTS))
+            source_dir, genome_or_ama_ref, params.get(self.PARAM_IN_TRANSCRIPTS))
 
         self._gen_ctab_files(params, alignment_ref)
 
@@ -295,7 +296,7 @@ class ExpressionUtils:
 
         expression_data = {
                            'numerical_interpretation': 'FPKM',
-                           'genome_id': genome_ref,
+                           'genome_id': genome_or_ama_ref,
                            'mapped_rnaseq_alignment': {alignment['read_sample_id']: alignment_ref},
                            'condition': alignment['condition'],
                            'file': file_handle,
@@ -317,28 +318,31 @@ class ExpressionUtils:
             if opt_param in params and params[opt_param] is not None:
                 expression_data[opt_param] = params[opt_param]
 
-        extra_provenance_input_refs = list()
-        extra_provenance_input_refs.append(params.get(self.PARAM_IN_ALIGNMENT_REF))
-        if self.PARAM_IN_GENOME_REF in params and params.get(self.PARAM_IN_GENOME_REF) is not None:
-            extra_provenance_input_refs.append(params.get(self.PARAM_IN_GENOME_REF))
+        if params.get('generate_data_only'):
+            returnVal = {'obj_data': expression_data}
+        else:
+            extra_provenance_input_refs = list()
+            extra_provenance_input_refs.append(params.get(self.PARAM_IN_ALIGNMENT_REF))
+            if self.PARAM_IN_GENOME_REF in params and params.get(self.PARAM_IN_GENOME_REF) is not None:
+                extra_provenance_input_refs.append(params.get(self.PARAM_IN_GENOME_REF))
 
-        self.__LOGGER.info('===========   Adding extra_provenance_refs')
-        self.__LOGGER.info(str(extra_provenance_input_refs))
-        self.__LOGGER.info('==========================================')
+            self.__LOGGER.info('===========   Adding extra_provenance_refs')
+            self.__LOGGER.info(str(extra_provenance_input_refs))
+            self.__LOGGER.info('==========================================')
 
-        res = self.dfu.save_objects(
-            {"id": ws_name_id,
-             "objects": [{
-                          "type": "KBaseRNASeq.RNASeqExpression",
-                          "data": expression_data,
-                          "name": obj_name_id,
-                          "extra_provenance_input_refs": extra_provenance_input_refs
-                         }
-                         ]})[0]
+            res = self.dfu.save_objects(
+                {"id": ws_name_id,
+                 "objects": [{
+                              "type": "KBaseRNASeq.RNASeqExpression",
+                              "data": expression_data,
+                              "name": obj_name_id,
+                              "extra_provenance_input_refs": extra_provenance_input_refs
+                             }
+                             ]})[0]
 
-        self.__LOGGER.info('save complete')
+            self.__LOGGER.info('save complete')
 
-        returnVal = {'obj_ref': str(res[6]) + '/' + str(res[0]) + '/' + str(res[4])}
+            returnVal = {'obj_ref': str(res[6]) + '/' + str(res[0]) + '/' + str(res[4])}
 
         self.__LOGGER.info('Uploaded object: ')
         print(returnVal)
@@ -414,7 +418,7 @@ class ExpressionUtils:
         """
         Wrapper function for use by in-narrative downloaders to download expressions from shock *
         :param params: instance of type "ExportParams" (* Required input
-           parameters for exporting expression string   source_ref         - 
+           parameters for exporting expression string   source_ref         -
            object reference of expression source. The object ref is
            'ws_name_or_id/obj_name_or_id' where ws_name_or_id is the
            workspace name or id and obj_name_or_id is the object name or id
@@ -494,9 +498,11 @@ class ExpressionUtils:
            row_id to feature id in the genome data - contains values for
            (feature,condition) pairs, where features correspond to rows and
            conditions are columns (ie data.values[feature][condition])
-           @optional description row_normalization col_normalization
-           @optional genome_ref feature_mapping conditionset_ref
-           condition_mapping report @metadata ws type @metadata ws scale
+           diff_expr_matrix_ref - added to connect filtered expression matrix
+           to differential expression matrix used for filtering @optional
+           description row_normalization col_normalization @optional
+           genome_ref feature_mapping conditionset_ref condition_mapping
+           report diff_expr_matrix_ref @metadata ws type @metadata ws scale
            @metadata ws row_normalization @metadata ws col_normalization
            @metadata ws genome_ref as Genome @metadata ws conditionset_ref as
            ConditionSet @metadata ws length(data.row_ids) as feature_count
@@ -511,26 +517,27 @@ class ExpressionUtils:
            for a ConditionSet data object (Note: ConditionSet objects do not
            yet exist - this is for now used as a placeholder). @id ws
            KBaseExperiments.ConditionSet), parameter "condition_mapping" of
-           mapping from String to String, parameter "data" of type
-           "FloatMatrix2D" (A simple 2D matrix of floating point numbers with
-           labels/ids for rows and columns.  The matrix is stored as a list
-           of lists, with the outer list containing rows, and the inner lists
-           containing values for each column of that row.  Row/Col ids should
-           be unique. row_ids - unique ids for rows. col_ids - unique ids for
-           columns. values - two dimensional array indexed as:
-           values[row][col] @metadata ws length(row_ids) as n_rows @metadata
-           ws length(col_ids) as n_cols) -> structure: parameter "row_ids" of
-           list of String, parameter "col_ids" of list of String, parameter
-           "values" of list of list of Double, parameter "report" of type
-           "AnalysisReport" (A basic report object used for a variety of
-           cases to mark informational messages, warnings, and errors related
-           to processing or quality control checks of raw data.) ->
-           structure: parameter "checkTypeDetected" of String, parameter
-           "checkUsed" of String, parameter "checkDescriptions" of list of
-           String, parameter "checkResults" of list of type "boolean"
-           (Indicates true or false values, false = 0, true = 1 @range
-           [0,1]), parameter "messages" of list of String, parameter
-           "warnings" of list of String, parameter "errors" of list of String
+           mapping from String to String, parameter "diff_expr_matrix_ref" of
+           String, parameter "data" of type "FloatMatrix2D" (A simple 2D
+           matrix of floating point numbers with labels/ids for rows and
+           columns.  The matrix is stored as a list of lists, with the outer
+           list containing rows, and the inner lists containing values for
+           each column of that row.  Row/Col ids should be unique. row_ids -
+           unique ids for rows. col_ids - unique ids for columns. values -
+           two dimensional array indexed as: values[row][col] @metadata ws
+           length(row_ids) as n_rows @metadata ws length(col_ids) as n_cols)
+           -> structure: parameter "row_ids" of list of String, parameter
+           "col_ids" of list of String, parameter "values" of list of list of
+           Double, parameter "report" of type "AnalysisReport" (A basic
+           report object used for a variety of cases to mark informational
+           messages, warnings, and errors related to processing or quality
+           control checks of raw data.) -> structure: parameter
+           "checkTypeDetected" of String, parameter "checkUsed" of String,
+           parameter "checkDescriptions" of list of String, parameter
+           "checkResults" of list of type "boolean" (Indicates true or false
+           values, false = 0, true = 1 @range [0,1]), parameter "messages" of
+           list of String, parameter "warnings" of list of String, parameter
+           "errors" of list of String
         """
         # ctx is the context object
         # return variables are: returnVal

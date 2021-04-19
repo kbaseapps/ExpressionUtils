@@ -1,3 +1,7 @@
+### Version 0.1.9
+- add return Expression object data only ability
+- add support for RNASeqAligment with AnnotatedMetagenomeAssembly reference
+
 ### Version 0.1.8
 - Changed SHOCK upload in unit tests to DataFileUtil.file_to_shock()
 

@@ -7,6 +7,8 @@ import urllib.parse
 import urllib.request
 
 from installed_clients.GenomeSearchUtilClient import GenomeSearchUtil
+from installed_clients.MetagenomeAPIClient import MetagenomeAPI
+from installed_clients.WorkspaceClient import Workspace
 
 
 def get_logger():
@@ -27,21 +29,34 @@ class ExpressionUtils:
      Constains a set of functions for expression levels calculations.
     """
 
-    def _get_feature_ids(self, genome_ref):
+    def _get_feature_ids(self, genome_or_ama_ref):
         """
         _get_feature_ids: get feature ids from genome
         """
-        self.logger.info("Matching to features from genome {}"
-                         .format(genome_ref))
+        self.logger.info("Matching to features from genome or AMA {}"
+                         .format(genome_or_ama_ref))
 
-        feature_num = self.gsu.search({'ref': genome_ref})['num_found']
+        obj_info = self.ws.get_objects2({
+            'objects': [{'ref': genome_or_ama_ref}],
+            'no_data': 1
+        })
+        obj_type = obj_info.get('data', [{}])[0].get('info', [None]*3)[2]
 
-        genome_features = self.gsu.search({'ref': genome_ref,
-                                           'limit': feature_num,
-                                           'sort_by': [['feature_id', True]]})['features']
+        if 'KBaseGenomes.Genome' in obj_type:
+            feature_num = self.gsu.search({'ref': genome_or_ama_ref})['num_found']
 
-        features_ids = [genome_feature.get('feature_id') for genome_feature in genome_features]
+            genome_features = self.gsu.search({'ref': genome_or_ama_ref,
+                                               'limit': feature_num,
+                                               'sort_by': [['feature_id', True]]})['features']
 
+            features_ids = [genome_feature.get('feature_id') for genome_feature in genome_features]
+        elif 'KBaseMetagenomes.AnnotatedMetagenomeAssembly' in obj_type:
+            feature_num = self.msu.search({'ref': genome_or_ama_ref})['num_found']
+            genome_features = self.msu.search({'ref': genome_or_ama_ref,
+                                               'limit': feature_num,
+                                               'sort_by': [['feature_id', True]]})['features']
+
+            features_ids = [genome_feature.get('feature_id') for genome_feature in genome_features]
         return list(set(features_ids))
 
     def __init__(self, config, logger=None):
@@ -53,8 +68,12 @@ class ExpressionUtils:
 
         callback_url = self.config['SDK_CALLBACK_URL']
         self.gsu = GenomeSearchUtil(callback_url)
+        self.msu = MetagenomeAPI(callback_url, service_ver='dev')
 
-    def get_expression_levels(self, filepath, genome_ref, id_col=0):
+        ws_url = self.config['workspace-url']
+        self.ws = Workspace(ws_url)
+
+    def get_expression_levels(self, filepath, genome_or_ama_ref, id_col=0):
         """
          Returns FPKM and TPM expression levels.
          # (see discussion @ https://www.biostars.org/p/160989/)
@@ -74,7 +93,7 @@ class ExpressionUtils:
         except:
             self.logger.error(f'Unable to find an FPKM column in the specified file: {filepath}')
 
-        feature_ids = self._get_feature_ids(genome_ref)
+        feature_ids = self._get_feature_ids(genome_or_ama_ref)
 
         sum_fpkm = 0.0
         with open(filepath) as f:

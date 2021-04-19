@@ -381,14 +381,14 @@ class ExpressionUtilsTest(unittest.TestCase):
                                 'alignment_ref': cls.getWsName() + '/test_alignment_genome'
         }
         cls.stringtie_params = {'destination_ref': cls.getWsName() + '/test_stringtie_expression',
-                            'source_dir': cls.upload_stringtie_dir_path,
-                            'alignment_ref': cls.getWsName() + '/test_alignment_genome'
-                            }
+                                'source_dir': cls.upload_stringtie_dir_path,
+                                'alignment_ref': cls.getWsName() + '/test_alignment_genome'
+                                }
 
         cls.cufflinks_params = {'destination_ref': cls.getWsName() + '/test_cufflinks_expression',
-                            'source_dir': cls.upload_cufflinks_dir_path,
-                            'alignment_ref': cls.getWsName() + '/test_alignment_genome'
-                            }
+                                'source_dir': cls.upload_cufflinks_dir_path,
+                                'alignment_ref': cls.getWsName() + '/test_alignment_genome'
+                                }
         cls.transcript_params = {
             'destination_ref': cls.getWsName() + '/test_transcript_expression',
             'source_dir': cls.upload_stringtie_dir_path,
@@ -399,6 +399,10 @@ class ExpressionUtilsTest(unittest.TestCase):
         cls.getImpl().upload_expression(cls.ctx, cls.stringtie_params)
         cls.getImpl().upload_expression(cls.ctx, cls.cufflinks_params)
         cls.getImpl().upload_expression(cls.ctx, cls.transcript_params)
+
+        cls.upload_ret_data_only = cls.getImpl().upload_expression(
+                                    cls.ctx,
+                                    {**cls.stringtie_params, **{'generate_data_only': True}})[0]
 
     @classmethod
     def getSize(cls, filename):
@@ -472,6 +476,19 @@ class ExpressionUtilsTest(unittest.TestCase):
 
         self.upload_expression_success(self.stringtie_params, self.uploaded_stringtie_zip)
 
+    def test_upload_return_data_only_success(self):
+
+        self.assertFalse('obj_ref' in self.upload_ret_data_only)
+
+        self.assertTrue('obj_data' in self.upload_ret_data_only)
+        obj_data = self.upload_ret_data_only['obj_data']
+
+        self.assertTrue('tpm_expression_levels' in obj_data)
+        self.assertTrue('expression_levels' in obj_data)
+        self.assertEqual(len(obj_data['tpm_expression_levels'].keys()), 10)
+        self.assertCountEqual(obj_data['tpm_expression_levels'].keys(),
+                              obj_data['expression_levels'].keys())
+
     def test_upload_stringtie_assembly_expression_success(self):
 
         params = {'destination_ref': self.getWsName() + '/test_stringtie_expression',
@@ -486,7 +503,7 @@ class ExpressionUtilsTest(unittest.TestCase):
 
     def test_upload_cufflinks_expression_success(self):
         self.upload_expression_success(self.cufflinks_params, self.uploaded_cufflinks_zip)
-    
+
     def test_download_stringtie_expression_success(self):
         self.download_expression_success('test_stringtie_expression', self.upload_stringtie_dir_path)
 
@@ -608,10 +625,9 @@ class ExpressionUtilsTest(unittest.TestCase):
 
     def test_upload_fail_no_genome_ref(self):
         self.fail_upload_expression(
-                        {
-                        'destination_ref': self.getWsName() + '/test_stringtie_expression',
-                        'source_dir': self.upload_stringtie_dir_path,
-                        'alignment_ref': self.getWsName() + '/test_alignment_assembly'
-                        },
+            {
+                'destination_ref': self.getWsName() + '/test_stringtie_expression',
+                'source_dir': self.upload_stringtie_dir_path,
+                'alignment_ref': self.getWsName() + '/test_alignment_assembly'
+                },
             'Alignment object does not contain genome_ref; "genome_ref" parameter is required')
-
