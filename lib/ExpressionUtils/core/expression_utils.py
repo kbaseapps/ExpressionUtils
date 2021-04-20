@@ -7,7 +7,6 @@ import urllib.parse
 import urllib.request
 
 from installed_clients.GenomeSearchUtilClient import GenomeSearchUtil
-from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 from installed_clients.WorkspaceClient import Workspace
 
@@ -37,11 +36,11 @@ class ExpressionUtils:
         self.logger.info("Matching to features from genome or AMA {}"
                          .format(genome_or_ama_ref))
 
-        ref = self.ws.get_object_subset(
-            [{"ref": genome_or_ama_ref, "included": ["features_handle_ref"]}]
-        )
-
-        obj_type = ref[0]['info'][2]
+        obj_info = self.ws.get_objects2({
+                    'objects': [{'ref': genome_or_ama_ref}],
+                    'no_data': 1
+                })
+        obj_type = obj_info.get('data', [{}])[0].get('info', [None]*3)[2]
 
         if 'KBaseGenomes.Genome' in obj_type:
             feature_num = self.gsu.search({'ref': genome_or_ama_ref})['num_found']
@@ -70,7 +69,6 @@ class ExpressionUtils:
         callback_url = self.config['SDK_CALLBACK_URL']
         self.gsu = GenomeSearchUtil(callback_url)
         self.mgu = MetagenomeUtils(callback_url, service_ver='dev')
-        self.dfu = DataFileUtil(callback_url)
 
         ws_url = self.config['workspace-url']
         self.ws = Workspace(ws_url)

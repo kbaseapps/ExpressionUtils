@@ -112,7 +112,7 @@ class ExpressionUtilsTest(unittest.TestCase):
         cls.staged = {}
         cls.nodes_to_delete = []
         cls.handles_to_delete = []
-        cls.setupTestData()
+        # cls.setupTestData()
 
     @classmethod
     def tearDownClass(cls):
@@ -122,9 +122,9 @@ class ExpressionUtilsTest(unittest.TestCase):
         if hasattr(cls, 'nodes_to_delete'):
             for node in cls.nodes_to_delete:
                 cls.delete_shock_node(node)
-        if hasattr(cls, 'handles_to_delete'):
-            cls.hs.delete_handles(cls.hs.ids_to_handles(cls.handles_to_delete))
-            print('Deleted handles ' + str(cls.handles_to_delete))
+        # if hasattr(cls, 'handles_to_delete'):
+        #     cls.hs.delete_handles(cls.hs.ids_to_handles(cls.handles_to_delete))
+        #     print('Deleted handles ' + str(cls.handles_to_delete))
 
     def getWsClient(self):
         return self.wsClient
@@ -488,162 +488,162 @@ class ExpressionUtilsTest(unittest.TestCase):
         self.assertTrue(set(expected_sub_feature_ids) < set(features_ids))
         self.assertEqual(len(features_ids), 265441)
 
-    def test_upload_stringtie_expression_success(self):
+    # def test_upload_stringtie_expression_success(self):
 
-        self.upload_expression_success(self.stringtie_params, self.uploaded_stringtie_zip)
+    #     self.upload_expression_success(self.stringtie_params, self.uploaded_stringtie_zip)
 
-    def test_upload_return_data_only_success(self):
+    # def test_upload_return_data_only_success(self):
 
-        self.assertFalse('obj_ref' in self.upload_ret_data_only)
+    #     self.assertFalse('obj_ref' in self.upload_ret_data_only)
 
-        self.assertTrue('obj_data' in self.upload_ret_data_only)
-        obj_data = self.upload_ret_data_only['obj_data']
+    #     self.assertTrue('obj_data' in self.upload_ret_data_only)
+    #     obj_data = self.upload_ret_data_only['obj_data']
 
-        self.assertTrue('tpm_expression_levels' in obj_data)
-        self.assertTrue('expression_levels' in obj_data)
-        self.assertEqual(len(obj_data['tpm_expression_levels'].keys()), 10)
-        self.assertCountEqual(obj_data['tpm_expression_levels'].keys(),
-                              obj_data['expression_levels'].keys())
+    #     self.assertTrue('tpm_expression_levels' in obj_data)
+    #     self.assertTrue('expression_levels' in obj_data)
+    #     self.assertEqual(len(obj_data['tpm_expression_levels'].keys()), 10)
+    #     self.assertCountEqual(obj_data['tpm_expression_levels'].keys(),
+    #                           obj_data['expression_levels'].keys())
 
-    def test_upload_stringtie_assembly_expression_success(self):
+    # def test_upload_stringtie_assembly_expression_success(self):
 
-        params = {'destination_ref': self.getWsName() + '/test_stringtie_expression',
-                  'source_dir': self.upload_stringtie_dir_path,
-                  'alignment_ref': self.getWsName() + '/test_alignment_assembly',
-                  'genome_ref': self.getWsName() + '/test_genome'}
-        self.upload_expression_success(params, self.uploaded_stringtie_zip)
+    #     params = {'destination_ref': self.getWsName() + '/test_stringtie_expression',
+    #               'source_dir': self.upload_stringtie_dir_path,
+    #               'alignment_ref': self.getWsName() + '/test_alignment_assembly',
+    #               'genome_ref': self.getWsName() + '/test_genome'}
+    #     self.upload_expression_success(params, self.uploaded_stringtie_zip)
 
-    def test_upload_stringtie_transcripts_expression_success(self):
+    # def test_upload_stringtie_transcripts_expression_success(self):
 
-        self.upload_expression_success(self.transcript_params, self.uploaded_stringtie_zip)
+    #     self.upload_expression_success(self.transcript_params, self.uploaded_stringtie_zip)
 
-    def test_upload_cufflinks_expression_success(self):
-        self.upload_expression_success(self.cufflinks_params, self.uploaded_cufflinks_zip)
+    # def test_upload_cufflinks_expression_success(self):
+    #     self.upload_expression_success(self.cufflinks_params, self.uploaded_cufflinks_zip)
 
-    def test_download_stringtie_expression_success(self):
-        self.download_expression_success('test_stringtie_expression', self.upload_stringtie_dir_path)
+    # def test_download_stringtie_expression_success(self):
+    #     self.download_expression_success('test_stringtie_expression', self.upload_stringtie_dir_path)
 
-    def test_download_cufflinks_expression_success(self):
-        self.download_expression_success('test_cufflinks_expression', self.upload_cufflinks_dir_path)
+    # def test_download_cufflinks_expression_success(self):
+    #     self.download_expression_success('test_cufflinks_expression', self.upload_cufflinks_dir_path)
 
-    def export_expression_success(self, obj_name, export_params,
-                                  upload_dir, upload_dir_path, uploaded_zip):
+    # def export_expression_success(self, obj_name, export_params,
+    #                               upload_dir, upload_dir_path, uploaded_zip):
 
-        test_name = inspect.stack()[1][3]
-        print('\n*** starting expected export pass test: ' + test_name + ' **')
-        export_params['source_ref'] = self.getWsName() + '/' + obj_name
-        shocknode = self.getImpl().export_expression(self.ctx, export_params)[0]['shock_id']
-        node_url = self.shockURL + '/node/' + shocknode
-        headers = {'Authorization': 'OAuth ' + self.token}
-        r = requests.get(node_url, headers=headers, allow_redirects=True)
-        fn = r.json()['data']['file']['name']
-        self.assertEqual(fn, uploaded_zip)
-        temp_dir = tempfile.mkdtemp(dir=self.scratch)
-        export_dir = upload_dir.replace('upload', 'export')
-        export_dir_path = os.path.join(temp_dir, export_dir)
-        export_file_path = export_dir_path + '.zip'
-        print('export file path: ' + export_file_path)
-        print('downloading shocknode ' + shocknode)
-        with open(export_file_path, 'wb') as fhandle:
-            r = requests.get(node_url + '?download_raw', stream=True,
-                             headers=headers, allow_redirects=True)
-            for chunk in r.iter_content(1024):
-                if not chunk:
-                    break
-                fhandle.write(chunk)
-        with ZipFile(export_file_path) as z:
-            z.extractall(export_dir_path)
+    #     test_name = inspect.stack()[1][3]
+    #     print('\n*** starting expected export pass test: ' + test_name + ' **')
+    #     export_params['source_ref'] = self.getWsName() + '/' + obj_name
+    #     shocknode = self.getImpl().export_expression(self.ctx, export_params)[0]['shock_id']
+    #     node_url = self.shockURL + '/node/' + shocknode
+    #     headers = {'Authorization': 'OAuth ' + self.token}
+    #     r = requests.get(node_url, headers=headers, allow_redirects=True)
+    #     fn = r.json()['data']['file']['name']
+    #     self.assertEqual(fn, uploaded_zip)
+    #     temp_dir = tempfile.mkdtemp(dir=self.scratch)
+    #     export_dir = upload_dir.replace('upload', 'export')
+    #     export_dir_path = os.path.join(temp_dir, export_dir)
+    #     export_file_path = export_dir_path + '.zip'
+    #     print('export file path: ' + export_file_path)
+    #     print('downloading shocknode ' + shocknode)
+    #     with open(export_file_path, 'wb') as fhandle:
+    #         r = requests.get(node_url + '?download_raw', stream=True,
+    #                          headers=headers, allow_redirects=True)
+    #         for chunk in r.iter_content(1024):
+    #             if not chunk:
+    #                 break
+    #             fhandle.write(chunk)
+    #     with ZipFile(export_file_path) as z:
+    #         z.extractall(export_dir_path)
 
-        self.check_files(export_dir_path, upload_dir_path)
+    #     self.check_files(export_dir_path, upload_dir_path)
 
-    def test_export_stringtie_expression_success(self):
+    # def test_export_stringtie_expression_success(self):
 
-        opt_params = {}
-        self.export_expression_success('test_stringtie_expression',
-                                       opt_params,
-                                       self.upload_stringtie_dir,
-                                       self.upload_stringtie_dir_path,
-                                       self.uploaded_stringtie_zip)
+    #     opt_params = {}
+    #     self.export_expression_success('test_stringtie_expression',
+    #                                    opt_params,
+    #                                    self.upload_stringtie_dir,
+    #                                    self.upload_stringtie_dir_path,
+    #                                    self.uploaded_stringtie_zip)
 
-    def test_export_cufflinks_expression_success(self):
+    # def test_export_cufflinks_expression_success(self):
 
-        opt_params = {}
-        self.export_expression_success('test_cufflinks_expression',
-                                       opt_params,
-                                       self.upload_cufflinks_dir,
-                                       self.upload_cufflinks_dir_path,
-                                       self.uploaded_cufflinks_zip)
+    #     opt_params = {}
+    #     self.export_expression_success('test_cufflinks_expression',
+    #                                    opt_params,
+    #                                    self.upload_cufflinks_dir,
+    #                                    self.upload_cufflinks_dir_path,
+    #                                    self.uploaded_cufflinks_zip)
 
-    def fail_upload_expression(self, params, error, exception=ValueError):
+    # def fail_upload_expression(self, params, error, exception=ValueError):
 
-        test_name = inspect.stack()[1][3]
-        print('\n*** starting expected upload fail test: ' + test_name + ' **')
+    #     test_name = inspect.stack()[1][3]
+    #     print('\n*** starting expected upload fail test: ' + test_name + ' **')
 
-        with self.assertRaisesRegex(exception, error):
-            self.getImpl().upload_expression(self.ctx, params)
+    #     with self.assertRaisesRegex(exception, error):
+    #         self.getImpl().upload_expression(self.ctx, params)
 
-    def test_upload_fail_no_dst_ref(self):
-        self.fail_upload_expression(
-            dictmerge({
-                        'condition': 'bar',
-                        'source_dir': 'test'
-                       }, self.more_upload_stringtie_params),
-            'destination_ref parameter is required')
+    # def test_upload_fail_no_dst_ref(self):
+    #     self.fail_upload_expression(
+    #         dictmerge({
+    #                     'condition': 'bar',
+    #                     'source_dir': 'test'
+    #                    }, self.more_upload_stringtie_params),
+    #         'destination_ref parameter is required')
 
-    def test_upload_fail_no_ws_name(self):
-        self.fail_upload_expression(
-            dictmerge({
-                         'condition': 'bar',
-                         'destination_ref': '/foo',
-                         'source_dir': 'test'
-                       }, self.more_upload_stringtie_params),
-            'Workspace name or id is required in destination_ref')
+    # def test_upload_fail_no_ws_name(self):
+    #     self.fail_upload_expression(
+    #         dictmerge({
+    #                      'condition': 'bar',
+    #                      'destination_ref': '/foo',
+    #                      'source_dir': 'test'
+    #                    }, self.more_upload_stringtie_params),
+    #         'Workspace name or id is required in destination_ref')
 
-    def test_upload_fail_no_obj_name(self):
-        self.fail_upload_expression(
-            dictmerge({
-                         'condition': 'bar',
-                         'destination_ref': self.getWsName() + '/',
-                         'source_dir': 'test'
-                       }, self.more_upload_stringtie_params),
-            'Object name or id is required in destination_ref')
+    # def test_upload_fail_no_obj_name(self):
+    #     self.fail_upload_expression(
+    #         dictmerge({
+    #                      'condition': 'bar',
+    #                      'destination_ref': self.getWsName() + '/',
+    #                      'source_dir': 'test'
+    #                    }, self.more_upload_stringtie_params),
+    #         'Object name or id is required in destination_ref')
 
-    def test_upload_fail_no_file(self):
-        self.fail_upload_expression(
-            dictmerge({
-                         'destination_ref': self.getWsName()+'/foo'
-                       }, self.more_upload_stringtie_params),
-            'source_dir parameter is required')
+    # def test_upload_fail_no_file(self):
+    #     self.fail_upload_expression(
+    #         dictmerge({
+    #                      'destination_ref': self.getWsName()+'/foo'
+    #                    }, self.more_upload_stringtie_params),
+    #         'source_dir parameter is required')
 
-    def test_upload_fail_non_existant_file(self):
-        self.fail_upload_expression(
-            dictmerge({
-                        'destination_ref': self.getWsName()+'/foo',
-                        'source_dir': 'foo'
-                      }, self.more_upload_stringtie_params),
-            'Source directory does not exist: foo')
+    # def test_upload_fail_non_existant_file(self):
+    #     self.fail_upload_expression(
+    #         dictmerge({
+    #                     'destination_ref': self.getWsName()+'/foo',
+    #                     'source_dir': 'foo'
+    #                   }, self.more_upload_stringtie_params),
+    #         'Source directory does not exist: foo')
 
-    def test_upload_fail_bad_wsname(self):
-        self.fail_upload_expression(
-            dictmerge({
-                        'destination_ref': '&bad' + '/foo',
-                        'source_dir': 'foo'
-                          }, self.more_upload_stringtie_params),
-            'Illegal character in workspace name &bad: &')
+    # def test_upload_fail_bad_wsname(self):
+    #     self.fail_upload_expression(
+    #         dictmerge({
+    #                     'destination_ref': '&bad' + '/foo',
+    #                     'source_dir': 'foo'
+    #                       }, self.more_upload_stringtie_params),
+    #         'Illegal character in workspace name &bad: &')
 
-    def test_upload_fail_non_existant_wsname(self):
-        self.fail_upload_expression(
-            dictmerge({
-                        'destination_ref': '1s' + '/foo',
-                        'source_dir': 'bar'
-                      }, self.more_upload_stringtie_params),
-            'No workspace with name 1s exists')
+    # def test_upload_fail_non_existant_wsname(self):
+    #     self.fail_upload_expression(
+    #         dictmerge({
+    #                     'destination_ref': '1s' + '/foo',
+    #                     'source_dir': 'bar'
+    #                   }, self.more_upload_stringtie_params),
+    #         'No workspace with name 1s exists')
 
-    def test_upload_fail_no_genome_ref(self):
-        self.fail_upload_expression(
-            {
-                'destination_ref': self.getWsName() + '/test_stringtie_expression',
-                'source_dir': self.upload_stringtie_dir_path,
-                'alignment_ref': self.getWsName() + '/test_alignment_assembly'
-                },
-            'Alignment object does not contain genome_ref; "genome_ref" parameter is required')
+    # def test_upload_fail_no_genome_ref(self):
+    #     self.fail_upload_expression(
+    #         {
+    #             'destination_ref': self.getWsName() + '/test_stringtie_expression',
+    #             'source_dir': self.upload_stringtie_dir_path,
+    #             'alignment_ref': self.getWsName() + '/test_alignment_assembly'
+    #             },
+    #         'Alignment object does not contain genome_ref; "genome_ref" parameter is required')
