@@ -5,9 +5,11 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import json
 
 from installed_clients.GenomeSearchUtilClient import GenomeSearchUtil
 from installed_clients.MetagenomeAPIClient import MetagenomeAPI
+from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.WorkspaceClient import Workspace
 
 
@@ -36,11 +38,11 @@ class ExpressionUtils:
         self.logger.info("Matching to features from genome or AMA {}"
                          .format(genome_or_ama_ref))
 
-        obj_info = self.ws.get_objects2({
-            'objects': [{'ref': genome_or_ama_ref}],
-            'no_data': 1
-        })
-        obj_type = obj_info.get('data', [{}])[0].get('info', [None]*3)[2]
+        ref = self.ws.get_object_subset(
+            [{"ref": genome_or_ama_ref, "included": ["features_handle_ref"]}]
+        )
+
+        obj_type = ref[0]['info'][2]
 
         if 'KBaseGenomes.Genome' in obj_type:
             feature_num = self.gsu.search({'ref': genome_or_ama_ref})['num_found']
@@ -52,11 +54,46 @@ class ExpressionUtils:
             features_ids = [genome_feature.get('feature_id') for genome_feature in genome_features]
         elif 'KBaseMetagenomes.AnnotatedMetagenomeAssembly' in obj_type:
             feature_num = self.msu.search({'ref': genome_or_ama_ref})['num_found']
-            genome_features = self.msu.search({'ref': genome_or_ama_ref,
-                                               'limit': feature_num,
-                                               'sort_by': [['feature_id', True]]})['features']
+            self.logger.info('Found {} AMA features'.format(feature_num))
 
-            features_ids = [genome_feature.get('feature_id') for genome_feature in genome_features]
+            chunk_size = 300
+            chunk_num = feature_num//chunk_size + 1
+            features_ids = list()
+
+            for i in range(chunk_num):
+
+                search_params = {
+                    'ref': genome_or_ama_ref,
+                    'sort_by': [('id', 1)],
+                    'start': i*chunk_size,
+                    'limit': chunk_size
+                }
+
+                try:
+                    genome_features = self.msu.search(search_params)['features']
+                    chuck_ids = [genome_feature.get('feature_id') for genome_feature in genome_features]
+                    features_ids.extend(chuck_ids)
+                except Exception:
+                    self.logger.warning('Failed to fetch features started at {}'.format(i*chunk_size))
+                    # reached to the end of indexed features
+                    break
+
+            if len(features_ids) < feature_num or feature_num == 0:
+                # try to fetch the rest of features from linked json file
+                try:
+                    features_handle_ref = ref[0]["data"]["features_handle_ref"]
+                    features_handle_file = self.dfu.shock_to_file({'handle_id': features_handle_ref,
+                                                                   'file_path': self.config['scratch'],
+                                                                   'unpack': 'unpack'})['file_path']
+
+                    with open(features_handle_file) as json_file:
+                        data = json.load(json_file)
+
+                    features_ids.extend([feature.get('id') for feature in data])
+
+                except Exception as err:
+                    self.logger.warning('Failed to fetch features from features json file\n{}'.format(err))
+
         return list(set(features_ids))
 
     def __init__(self, config, logger=None):
@@ -69,6 +106,7 @@ class ExpressionUtils:
         callback_url = self.config['SDK_CALLBACK_URL']
         self.gsu = GenomeSearchUtil(callback_url)
         self.msu = MetagenomeAPI(callback_url, service_ver='dev')
+        self.dfu = DataFileUtil(callback_url)
 
         ws_url = self.config['workspace-url']
         self.ws = Workspace(ws_url)
