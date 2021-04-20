@@ -37,9 +37,9 @@ class ExpressionUtils:
                          .format(genome_or_ama_ref))
 
         obj_info = self.ws.get_objects2({
-                    'objects': [{'ref': genome_or_ama_ref}],
-                    'no_data': 1
-                })
+            'objects': [{'ref': genome_or_ama_ref}],
+            'no_data': 1
+        })
         obj_type = obj_info.get('data', [{}])[0].get('info', [None]*3)[2]
 
         if 'KBaseGenomes.Genome' in obj_type:
