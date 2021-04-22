@@ -472,6 +472,22 @@ class ExpressionUtilsTest(unittest.TestCase):
 
         self.check_files(ret['destination_dir'], upload_dir_path)
 
+    def test__get_feature_ids(self):
+
+        name_ref = "KBaseTestData/metagenome_badabing.assembly.fa_metagenome/1"
+        ref = self.wsClient.get_objects2({'objects': [{'ref': name_ref}]})['data'][0]['path'][0]
+
+        expression_utils = Expression_Utils(self.cfg)
+        features_ids = expression_utils._get_feature_ids(ref)
+
+        expected_sub_feature_ids = ['Ga0065724_100001.1', 'Ga0065724_100001.100',
+                                    'Ga0065724_100001.1000_gene', 'Ga0065724_100001.1007',
+                                    'Ga0065724_100001.1003', 'Ga0065724_100001.1000',
+                                    'Ga0065724_100001.1003_gene', 'Ga0065724_100001.1007_gene',
+                                    'Ga0065724_100001.100_gene', 'Ga0065724_100001.1010']
+        self.assertTrue(set(expected_sub_feature_ids) < set(features_ids))
+        self.assertEqual(len(features_ids), 265441)
+
     def test_upload_stringtie_expression_success(self):
 
         self.upload_expression_success(self.stringtie_params, self.uploaded_stringtie_zip)

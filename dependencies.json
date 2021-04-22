@@ -23,9 +23,9 @@
   "type" : "sdk",
   "version_tag" : "release"
 }, {
-  "module_name" : "MetagenomeAPI",
+  "module_name" : "MetagenomeUtils",
   "type" : "sdk",
-  "version_tag" : "release"
+  "version_tag" : "dev"
 }, {
   "module_name" : "ReadsAlignmentUtils",
   "type" : "sdk",

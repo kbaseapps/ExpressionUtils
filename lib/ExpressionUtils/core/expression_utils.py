@@ -7,7 +7,7 @@ import urllib.parse
 import urllib.request
 
 from installed_clients.GenomeSearchUtilClient import GenomeSearchUtil
-from installed_clients.MetagenomeAPIClient import MetagenomeAPI
+from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 from installed_clients.WorkspaceClient import Workspace
 
 
@@ -51,12 +51,12 @@ class ExpressionUtils:
 
             features_ids = [genome_feature.get('feature_id') for genome_feature in genome_features]
         elif 'KBaseMetagenomes.AnnotatedMetagenomeAssembly' in obj_type:
-            feature_num = self.msu.search({'ref': genome_or_ama_ref})['num_found']
-            genome_features = self.msu.search({'ref': genome_or_ama_ref,
-                                               'limit': feature_num,
-                                               'sort_by': [['feature_id', True]]})['features']
 
-            features_ids = [genome_feature.get('feature_id') for genome_feature in genome_features]
+            features = self.mgu.get_annotated_metagenome_assembly_features({
+                                                                    'ref': genome_or_ama_ref,
+                                                                    'only_ids': 1})['features']
+            features_ids = [feature.get('id') for feature in features]
+
         return list(set(features_ids))
 
     def __init__(self, config, logger=None):
@@ -68,7 +68,7 @@ class ExpressionUtils:
 
         callback_url = self.config['SDK_CALLBACK_URL']
         self.gsu = GenomeSearchUtil(callback_url)
-        self.msu = MetagenomeAPI(callback_url, service_ver='dev')
+        self.mgu = MetagenomeUtils(callback_url, service_ver='dev')
 
         ws_url = self.config['workspace-url']
         self.ws = Workspace(ws_url)
